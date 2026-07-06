@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from loguru import logger as _loguru_logger
 
@@ -75,21 +75,3 @@ def get_logger(name: str):
     """获取统一命名空间下的 logger。"""
     full_name = name if name.startswith(_NAMESPACE) else f'{_NAMESPACE}.{name}'
     return _loguru_logger.bind(component=_component_name(full_name))
-
-
-def format_kv_pairs(payload: Mapping[str, Any]) -> str:
-    return ' | '.join(f'{key}={value}' for key, value in payload.items())
-
-
-def build_progress_message(label: str, current: int, total: int, extra: str = '', width: int = 24) -> str:
-    safe_total = max(total, 1)
-    safe_current = min(max(current, 0), safe_total)
-    ratio = safe_current / safe_total
-    filled = int(width * ratio)
-    bar = '█' * filled + '░' * (width - filled)
-    suffix = f' | {extra}' if extra else ''
-    return f'{label} [{bar}] {ratio * 100:6.2f}% ({safe_current}/{safe_total}){suffix}'
-
-
-def log_progress(logger: Any, label: str, current: int, total: int, extra: str = '') -> None:
-    logger.info(build_progress_message(label, current, total, extra=extra))

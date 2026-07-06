@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.utils.logger import get_logger, log_progress
+from src.utils.logger import get_logger
 
 try:  # pragma: no cover - 依赖是否安装取决于运行环境
     from alive_progress import alive_bar
@@ -33,7 +33,21 @@ class WorkflowProgress:
             self._bar.text(stage)
             self._bar()
             return
-        log_progress(self._logger, self.label, self.completed_units, self.total_units, extra)
+        safe_total = max(int(self.total_units), 1)
+        safe_current = min(max(self.completed_units, 0), safe_total)
+        ratio = safe_current / safe_total
+        filled = int(24 * ratio)
+        bar = '█' * filled + '░' * (24 - filled)
+        suffix = f' | {extra}' if extra else ''
+        self._logger.info(
+            '{} [{}] {:6.2f}% ({}/{}){}',
+            self.label,
+            bar,
+            ratio * 100,
+            safe_current,
+            safe_total,
+            suffix,
+        )
 
     def close(self) -> None:
         if self._bar_cm is None:
