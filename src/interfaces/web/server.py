@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import ssl
+import subprocess
+import tempfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict
@@ -13,6 +16,41 @@ from src.serving.inference import load_dashboard_bundle, load_inference_bundle, 
 from src.utils.logger import configure_project_logging, get_logger
 
 logger = get_logger('web-server')
+
+
+def _prepare_https_certificates(certfile: str | None, keyfile: str | None) -> tuple[Path, Path]:
+    if certfile and keyfile:
+        cert_path = Path(certfile)
+        key_path = Path(keyfile)
+        if not cert_path.exists():
+            raise FileNotFoundError(f'未找到证书文件：{cert_path}')
+        if not key_path.exists():
+            raise FileNotFoundError(f'未找到私钥文件：{key_path}')
+        return cert_path, key_path
+
+    runtime_dir = Path(tempfile.mkdtemp(prefix='obesity-risk-https-'))
+    cert_path = runtime_dir / 'server.crt'
+    key_path = runtime_dir / 'server.key'
+    command = [
+        'openssl',
+        'req',
+        '-x509',
+        '-newkey',
+        'rsa:2048',
+        '-nodes',
+        '-days',
+        '7',
+        '-subj',
+        '/CN=localhost',
+        '-keyout',
+        str(key_path),
+        '-out',
+        str(cert_path),
+    ]
+    completed = subprocess.run(command, capture_output=True, text=True, check=False)
+    if completed.returncode != 0:
+        raise RuntimeError(f'自动生成 HTTPS 证书失败：{completed.stderr.strip() or completed.stdout.strip()}')
+    return cert_path, key_path
 
 
 def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any], dashboard: Dict[str, Any]) -> type[BaseHTTPRequestHandler]:
@@ -101,12 +139,16 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any], dashb
     return PredictionHandler
 
 
-def run_server(host: str = '127.0.0.1', port: int = 8000) -> None:
+def run_server(host: str = '127.0.0.1', port: int = 8000, certfile: str | None = None, keyfile: str | None = None) -> None:
     config = load_project_config()
     configure_project_logging(config['project_root'], relative_log_path=config['output_dirs']['logs'] + '/project.log')
     bundle = load_inference_bundle(config)
     dashboard = load_dashboard_bundle(config)
     handler = create_request_handler(config, bundle, dashboard)
     server = ThreadingHTTPServer((host, port), handler)
-    logger.info('Web 演示服务已启动：http://%s:%s', host, port)
+    cert_path, key_path = _prepare_https_certificates(certfile, keyfile)
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(certfile=str(cert_path), keyfile=str(key_path))
+    server.socket = ssl_context.wrap_socket(server.socket, server_side=True)
+    logger.info('Web 演示服务已启动：https://%s:%s', host, port)
     server.serve_forever()

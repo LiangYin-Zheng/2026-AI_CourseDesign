@@ -209,13 +209,17 @@ def build_argument_parser() -> argparse.ArgumentParser:
     subparsers.add_parser('train-sklearn', help='仅执行 sklearn 版本数据处理、训练、评估与图表生成')
     subparsers.add_parser('train-manual', help='仅执行手搓版本训练流程，作为对照实验')
 
-    serve_web_parser = subparsers.add_parser('serve-web', help='启动本地 HTTP Web 演示服务')
+    serve_web_parser = subparsers.add_parser('serve-web', help='启动本地 HTTPS Web 演示服务')
     serve_web_parser.add_argument('--host', default='127.0.0.1')
     serve_web_parser.add_argument('--port', type=int, default=8000)
+    serve_web_parser.add_argument('--certfile', default=None, help='HTTPS 证书文件路径，默认自动生成临时自签证书')
+    serve_web_parser.add_argument('--keyfile', default=None, help='HTTPS 私钥文件路径，默认自动生成临时自签私钥')
 
     serve_alias_parser = subparsers.add_parser('serve', help='serve-web 的兼容别名')
     serve_alias_parser.add_argument('--host', default='127.0.0.1')
     serve_alias_parser.add_argument('--port', type=int, default=8000)
+    serve_alias_parser.add_argument('--certfile', default=None, help='HTTPS 证书文件路径，默认自动生成临时自签证书')
+    serve_alias_parser.add_argument('--keyfile', default=None, help='HTTPS 私钥文件路径，默认自动生成临时自签私钥')
 
     subparsers.add_parser('gui-local', help='启动无需 HTTP 的本地桌面界面')
 
@@ -245,7 +249,7 @@ def main() -> None:
             manual_summary = run_manual_training_pipeline(config, context, progress)
         finalize_training_outputs(config, context, sklearn_summary, manual_summary, progress)
     elif arguments.command in {'serve-web', 'serve'}:
-        run_server(arguments.host, arguments.port)
+        run_server(arguments.host, arguments.port, arguments.certfile, arguments.keyfile)
     elif arguments.command == 'gui-local':
         run_local_gui()
     elif arguments.command == 'predict':
