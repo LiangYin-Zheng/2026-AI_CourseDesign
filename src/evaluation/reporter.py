@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from src.interfaces.shared.dashboard_schema import get_training_mode_label, normalize_dashboard_summary
 from src.utils.file_utils import write_text
 
 
@@ -79,7 +80,9 @@ def render_family_comparison_report(
     title: str = '模型对比报告',
     metric_keys: Sequence[str] = DEFAULT_METRIC_KEYS,
 ) -> str:
-    rows = summary['comparison_rows']
+    normalized = normalize_dashboard_summary(dict(summary), {'project_name': summary.get('project_name', '未知项目')})
+    rows = normalized['comparison_rows']
+    overview = normalized['overview']
     headers = ['家族', '模型', *[key.replace('_', ' ').title() for key in metric_keys]]
     table_rows = [
         [
@@ -93,9 +96,12 @@ def render_family_comparison_report(
         f'# {title}',
         '',
         '## 1. 总览',
-        f"- 数据集样本量：{summary['dataset']['sample_count']}",
-        f"- 标签类别数：{summary['dataset']['class_count']}",
-        f"- 推荐部署模型：{summary['recommended_model']['family']} / {summary['recommended_model']['name']}",
+        f"- 项目名称：{overview['project_name']}",
+        f"- 训练路线：{get_training_mode_label(overview['training_mode'])}",
+        f"- 数据集样本量：{overview['sample_count']}",
+        f"- 标签类别数：{overview['class_count']}",
+        f"- 推荐部署模型：{overview['recommended_model']['family']} / {overview['recommended_model']['name']}",
+        f"- 最优 Macro F1：{overview['best_macro_f1']}",
         '',
         '## 2. 核心模型横向对比',
         render_markdown_table(headers, table_rows),

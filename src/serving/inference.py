@@ -8,6 +8,8 @@ import pandas as pd
 
 from src.data_processing.cleaner import clean_dataset
 from src.features.preprocessor import TabularPreprocessor
+from src.interfaces.shared.dashboard_schema import normalize_dashboard_summary
+from src.interfaces.shared.formatters import normalize_prediction_result
 from src.models.logistic_regression import SoftmaxLogisticRegression
 from src.models.manual_trainer import load_model_state
 from src.models.neural_network import SimpleNeuralNetwork
@@ -55,15 +57,24 @@ def load_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
 def load_dashboard_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     dashboard_path = Path(config['output_dirs']['evaluation']) / 'training_dashboard.json'
     if dashboard_path.exists():
-        return read_json(dashboard_path)
-    return {
+        return normalize_dashboard_summary(read_json(dashboard_path), config)
+    return normalize_dashboard_summary({
         'project_name': config['project_name'],
         'message': '尚未检测到训练摘要，请先执行 train / train-sklearn / train-manual。',
+        'training_mode': 'artifacts-only',
+        'status': 'no_dashboard',
+        'generated_at': None,
         'families': {'sklearn': None, 'manual': None},
+        'dataset': {
+            'sample_count': '-',
+            'class_count': '-',
+            'split': {},
+        },
         'comparison_rows': [],
         'parameter_tables': [],
         'artifacts': {},
-    }
+        'recommended_model': {'family': '-', 'name': '-', 'macro_f1': None},
+    }, config)
 
 
 def predict_with_sklearn(payload: Dict[str, Any], config: Dict[str, Any], sklearn_bundle: Dict[str, Any]) -> Dict[str, Any]:
@@ -116,4 +127,4 @@ def predict_single(payload: Dict[str, Any], config: Dict[str, Any], bundle: Dict
         result['manual'] = predict_with_manual(payload, config, bundle['manual'])
     if 'sklearn' not in result and 'manual' not in result:
         raise ValueError('未检测到可用模型，请先执行训练。')
-    return result
+    return normalize_prediction_result(result)

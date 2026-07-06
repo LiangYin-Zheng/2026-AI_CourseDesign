@@ -13,6 +13,7 @@ from src.data_processing.loader import load_dataset
 from src.data_processing.splitter import stratified_split_dataframe
 from src.evaluation.reporter import render_family_comparison_report, save_model_report
 from src.features.preprocessor import TabularPreprocessor
+from src.interfaces.shared.dashboard_schema import DEFAULT_TRAINING_MODE, normalize_dashboard_summary
 from src.interfaces.desktop.app import run_local_gui
 from src.interfaces.web.server import run_server
 from src.models.manual_trainer import count_manual_training_units, train_all_models
@@ -110,7 +111,13 @@ def _collect_artifacts(config: Dict[str, Any]) -> Dict[str, list[str]]:
     return artifact_map
 
 
-def build_dashboard_summary(config: Dict[str, Any], context: Dict[str, Any], sklearn_summary: Dict[str, Any] | None, manual_summary: Dict[str, Any] | None) -> Dict[str, Any]:
+def build_dashboard_summary(
+    config: Dict[str, Any],
+    context: Dict[str, Any],
+    sklearn_summary: Dict[str, Any] | None,
+    manual_summary: Dict[str, Any] | None,
+    training_mode: str,
+) -> Dict[str, Any]:
     comparison_rows: list[dict[str, Any]] = []
     parameter_tables: list[dict[str, Any]] = []
 
@@ -139,6 +146,9 @@ def build_dashboard_summary(config: Dict[str, Any], context: Dict[str, Any], skl
     return {
         'generated_at': datetime.now().isoformat(timespec='seconds'),
         'project_name': config['project_name'],
+        'training_mode': training_mode or DEFAULT_TRAINING_MODE,
+        'status': 'ready',
+        'message': '训练流程已完成，仪表盘已生成。',
         'dataset': {
             'sample_count': len(context['clean_df']),
             'class_count': context['clean_df'][config['target_column']].nunique(),
@@ -168,31 +178,34 @@ def finalize_training_outputs(
     sklearn_summary: Dict[str, Any] | None,
     manual_summary: Dict[str, Any] | None,
     progress: WorkflowProgress,
+    training_mode: str,
 ) -> Dict[str, Any]:
-    dashboard_summary = build_dashboard_summary(config, context, sklearn_summary, manual_summary)
-    write_json(Path(config['output_dirs']['evaluation']) / 'training_dashboard.json', dashboard_summary)
-    write_text(Path(config['output_dirs']['reports']) / 'family_comparison_report.md', render_family_comparison_report(dashboard_summary))
+    dashboard_summary = build_dashboard_summary(config, context, sklearn_summary, manual_summary, training_mode)
+    normalized_dashboard = normalize_dashboard_summary(dashboard_summary, config)
+    write_json(Path(config['output_dirs']['evaluation']) / 'training_dashboard.json', normalized_dashboard)
+    write_text(Path(config['output_dirs']['reports']) / 'family_comparison_report.md', render_family_comparison_report(normalized_dashboard))
     final_report_lines = [
         '# 项目训练交付摘要',
         '',
-        f"- 数据集规模：{dashboard_summary['dataset']['sample_count']} 条样本",
-        f"- 标签类别数：{dashboard_summary['dataset']['class_count']} 类",
-        f"- 推荐部署模型：{dashboard_summary['recommended_model']['family']} / {dashboard_summary['recommended_model']['name']}",
-        f"- 推荐模型 Macro F1：{dashboard_summary['recommended_model']['macro_f1']}",
+        f"- 训练路线：{normalized_dashboard['overview']['training_mode_label']}",
+        f"- 数据集规模：{normalized_dashboard['overview']['sample_count']} 条样本",
+        f"- 标签类别数：{normalized_dashboard['overview']['class_count']} 类",
+        f"- 推荐部署模型：{normalized_dashboard['overview']['recommended_model']['family']} / {normalized_dashboard['overview']['recommended_model']['name']}",
+        f"- 推荐模型 Macro F1：{normalized_dashboard['overview']['best_macro_f1']}",
         f"- 仪表盘摘要：{Path(config['output_dirs']['evaluation']) / 'training_dashboard.json'}",
         f"- 日志文件：{Path(config['output_dirs']['logs']) / 'project.log'}",
     ]
     write_text(Path(config['output_dirs']['reports']) / 'final_summary.md', '\n'.join(final_report_lines))
-    progress.advance('汇总交付结果', f"recommended={dashboard_summary['recommended_model']['family']}/{dashboard_summary['recommended_model']['name']}")
+    progress.advance('汇总交付结果', f"recommended={normalized_dashboard['overview']['recommended_model']['family']}/{normalized_dashboard['overview']['recommended_model']['name']}")
     progress.close()
-    log_parameter_summary(dashboard_summary['parameter_tables'])
+    log_parameter_summary(normalized_dashboard['parameter_rows'])
     logger.info(
         '交付摘要完成：recommended={}/{} | macro_f1={}',
-        dashboard_summary['recommended_model']['family'],
-        dashboard_summary['recommended_model']['name'],
-        dashboard_summary['recommended_model']['macro_f1'],
+        normalized_dashboard['overview']['recommended_model']['family'],
+        normalized_dashboard['overview']['recommended_model']['name'],
+        normalized_dashboard['overview']['best_macro_f1'],
     )
-    return dashboard_summary
+    return normalized_dashboard
 
 
 def run_prediction_command(json_text: str | None, payload_file: str | None) -> None:
@@ -249,7 +262,7 @@ def main() -> None:
                 sklearn_summary = run_sklearn_training_pipeline(config, context, progress)
             if arguments.command in {'train', 'train-manual'}:
                 manual_summary = run_manual_training_pipeline(config, context, progress)
-            finalize_training_outputs(config, context, sklearn_summary, manual_summary, progress)
+            finalize_training_outputs(config, context, sklearn_summary, manual_summary, progress, arguments.command)
     elif arguments.command in {'serve-web', 'serve'}:
         run_server(arguments.host, arguments.port)
     elif arguments.command == 'gui-local':
