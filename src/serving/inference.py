@@ -10,6 +10,7 @@ from src.data_processing.cleaner import clean_dataset
 from src.features.preprocessor import TabularPreprocessor
 from src.interfaces.shared.dashboard_schema import normalize_dashboard_summary
 from src.interfaces.shared.formatters import normalize_prediction_result
+from src.interfaces.shared.sample_schema import coerce_prediction_payload
 from src.models.logistic_regression import SoftmaxLogisticRegression
 from src.models.manual_trainer import load_model_state
 from src.models.neural_network import SimpleNeuralNetwork
@@ -120,6 +121,7 @@ def predict_with_manual(payload: Dict[str, Any], config: Dict[str, Any], manual_
 
 
 def predict_single(payload: Dict[str, Any], config: Dict[str, Any], bundle: Dict[str, Any]) -> Dict[str, Any]:
+    payload = coerce_prediction_payload(payload)
     result: Dict[str, Any] = {'success': True}
     if bundle.get('sklearn') is not None:
         result['sklearn'] = predict_with_sklearn(payload, config, bundle['sklearn'])

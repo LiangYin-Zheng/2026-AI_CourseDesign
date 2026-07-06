@@ -24,6 +24,7 @@ FIELD_DEFINITIONS = [
 
 INTEGER_FIELDS = {'family_history_with_overweight', 'high_calorie_food_frequency', 'smokes', 'calorie_monitoring'}
 FLOAT_FIELDS = {'age', 'height_m', 'weight_kg', 'vegetable_intake_score', 'main_meals_per_day', 'water_intake_liters', 'physical_activity_score', 'technology_use_hours'}
+SAMPLE_FIELD_NAMES = {field_name for field_name, *_ in FIELD_DEFINITIONS}
 
 
 def coerce_value(field_name: str, raw_value: str) -> Any:
@@ -41,3 +42,12 @@ def coerce_sample_value(field_name: str, raw_value: str) -> Any:
 def build_sample_payload(field_values: dict[str, str]) -> dict[str, Any]:
     return {field_name: coerce_value(field_name, raw_value) for field_name, raw_value in field_values.items()}
 
+
+def coerce_prediction_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized_payload: dict[str, Any] = {}
+    for field_name, raw_value in payload.items():
+        if field_name in SAMPLE_FIELD_NAMES:
+            normalized_payload[field_name] = coerce_value(field_name, str(raw_value))
+        else:
+            normalized_payload[field_name] = raw_value
+    return normalized_payload
