@@ -214,7 +214,14 @@ def train_sklearn_models(
     y_train_validation = label_encoder.fit_transform(pd.concat([datasets['train'][target_column], datasets['validation'][target_column]], axis=0, ignore_index=True).astype(str))
     class_names = label_encoder.classes_.tolist()
 
-    logger.info('sklearn 训练输入：train=%s | validation=%s | test=%s | feature_dim=%s | class_count=%s', len(datasets['train']), len(datasets['validation']), len(datasets['test']), X_train.shape[1], len(class_names))
+    logger.info(
+        'sklearn 训练输入：train={} | validation={} | test={} | feature_dim={} | class_count={}',
+        len(datasets['train']),
+        len(datasets['validation']),
+        len(datasets['test']),
+        X_train.shape[1],
+        len(class_names),
+    )
 
     baseline_config = config['sklearn_models']['baseline']
     logistic_grid = list(ParameterGrid(config['sklearn_models']['optimization_grids']['logistic_regression']))
@@ -321,5 +328,5 @@ def train_sklearn_models(
 
     save_sklearn_visualizations(training_summary, training_figure_dir, comparison_figure_dir)
     write_text(report_output_dir / 'sklearn_model_report.md', render_sklearn_report(training_summary))
-    logger.info('sklearn 模型训练完成：best_model=%s | best_macro_f1=%s', best_model_name, model_results['optimized'][best_model_name]['test_metrics']['macro_f1'])
+    logger.info('sklearn 模型训练完成：best_model={} | best_macro_f1={}', best_model_name, model_results['optimized'][best_model_name]['test_metrics']['macro_f1'])
     return training_summary

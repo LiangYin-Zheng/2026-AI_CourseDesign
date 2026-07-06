@@ -15,8 +15,8 @@ class TestProjectLogger(unittest.TestCase):
             self.assertEqual(log_path, Path(tmpdir) / 'logs/project.log')
 
             logger = project_logger.get_logger('unit-test')
-            logger.notice('notice event %s', 'ready')
-            logger.info('info event %s', 'done')
+            logger.log('NOTICE', 'notice event {}', 'ready')
+            logger.info('info event {}', 'done')
 
             content = log_path.read_text(encoding='utf-8')
             self.assertIn('unit-test', content)

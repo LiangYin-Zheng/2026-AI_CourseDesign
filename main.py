@@ -85,14 +85,14 @@ def build_preprocessor(config: Dict[str, Any], datasets: Dict[str, Any]) -> Tabu
 
 
 def run_sklearn_training_pipeline(config: Dict[str, Any], context: Dict[str, Any], progress: WorkflowProgress) -> Dict[str, Any]:
-    logger.info('sklearn 训练链路启动。')
+    logger.debug('sklearn 训练链路启动。')
     training_summary = train_sklearn_models(context['datasets'], config, progress_callback=progress.advance)
     save_model_report(Path(config['output_dirs']['reports']) / 'sklearn_family_report.md', training_summary['model_results'], family_name='sklearn 模型')
     return training_summary
 
 
 def run_manual_training_pipeline(config: Dict[str, Any], context: Dict[str, Any], progress: WorkflowProgress) -> Dict[str, Any]:
-    logger.info('手搓训练链路启动。')
+    logger.debug('手搓训练链路启动。')
     preprocessor = build_preprocessor(config, context['datasets'])
     training_summary = train_all_models(context['datasets'], preprocessor, config, progress_callback=progress.advance)
     save_model_report(Path(config['output_dirs']['reports']) / 'manual_family_report.md', training_summary['model_results'], family_name='手搓模型')
@@ -159,7 +159,7 @@ def log_parameter_summary(parameter_tables: list[dict[str, Any]]) -> None:
         return
     logger.info('优化后参数汇总：')
     for row in parameter_tables:
-        logger.info('  %s/%s -> %s', row['family'], row['name'], format_kv_pairs(row['parameters']))
+        logger.info('  {}/{} -> {}', row['family'], row['name'], format_kv_pairs(row['parameters']))
 
 
 def finalize_training_outputs(
@@ -184,8 +184,14 @@ def finalize_training_outputs(
     ]
     write_text(Path(config['output_dirs']['reports']) / 'final_summary.md', '\n'.join(final_report_lines))
     progress.advance('汇总交付结果', f"recommended={dashboard_summary['recommended_model']['family']}/{dashboard_summary['recommended_model']['name']}")
+    progress.close()
     log_parameter_summary(dashboard_summary['parameter_tables'])
-    logger.info('交付摘要完成：recommended=%s/%s | macro_f1=%s', dashboard_summary['recommended_model']['family'], dashboard_summary['recommended_model']['name'], dashboard_summary['recommended_model']['macro_f1'])
+    logger.info(
+        '交付摘要完成：recommended={}/{} | macro_f1={}',
+        dashboard_summary['recommended_model']['family'],
+        dashboard_summary['recommended_model']['name'],
+        dashboard_summary['recommended_model']['macro_f1'],
+    )
     return dashboard_summary
 
 
@@ -229,7 +235,7 @@ def main() -> None:
     config = load_project_config()
     initialize_output_directories(config)
     log_path = configure_project_logging(config['project_root'], relative_log_path=config['output_dirs']['logs'] + '/project.log')
-    logger.info('项目启动：%s', format_kv_pairs({'project': config['project_name'], 'seed': config['random_seed'], 'data_path': config['data_path'], 'log_file': log_path}))
+    logger.info('项目启动：{}', format_kv_pairs({'project': config['project_name'], 'seed': config['random_seed'], 'data_path': config['data_path'], 'log_file': log_path}))
 
     parser = build_argument_parser()
     arguments = parser.parse_args()

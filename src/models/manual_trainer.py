@@ -194,7 +194,14 @@ def train_all_models(
     y_train_validation = preprocessor.encode_target(pd.concat([datasets['train'][target_column], datasets['validation'][target_column]], axis=0, ignore_index=True))
     class_names = list(preprocessor.class_names)
 
-    logger.info('手搓模型训练输入：train=%s | validation=%s | test=%s | feature_dim=%s | class_count=%s', len(datasets['train']), len(datasets['validation']), len(datasets['test']), X_train.shape[1], len(class_names))
+    logger.info(
+        '手搓模型训练输入：train={} | validation={} | test={} | feature_dim={} | class_count={}',
+        len(datasets['train']),
+        len(datasets['validation']),
+        len(datasets['test']),
+        X_train.shape[1],
+        len(class_names),
+    )
 
     baseline_logistic_parameters = config['baseline_models']['logistic_regression']
     baseline_logistic_model, baseline_logistic_validation_metrics = _fit_candidate(
@@ -292,5 +299,5 @@ def train_all_models(
 
     save_manual_visualizations(training_summary, figure_root)
     write_text(report_output_dir / 'manual_model_summary.md', render_manual_report(training_summary))
-    logger.info('手搓模型训练完成：best_model=%s | best_macro_f1=%s', best_model_name, model_results['optimized'][best_model_name]['test_metrics']['macro_f1'])
+    logger.info('手搓模型训练完成：best_model={} | best_macro_f1={}', best_model_name, model_results['optimized'][best_model_name]['test_metrics']['macro_f1'])
     return training_summary

@@ -29,7 +29,7 @@ class WorkflowProgress:
         self.completed_units += 1
         extra = stage if not detail else f'{stage} | {detail}'
         if self._bar is not None:
-            self._logger.debug('进度更新：%s/%s | %s', self.completed_units, self.total_units, extra)
+            self._logger.debug('进度更新：{}/{} | {}', self.completed_units, self.total_units, extra)
             self._bar.text(stage)
             self._bar()
             return
