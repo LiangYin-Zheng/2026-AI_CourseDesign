@@ -1,7 +1,7 @@
 # API 接口文档
 
 ## 1. 接口概览
-本项目提供一个健康检查接口和一个肥胖风险预测接口，均由本地服务 `src/api/server.py` 提供。
+本项目的 Web 服务位于 `src/interfaces/web/server.py`，默认提供健康检查、训练摘要和单样本预测接口。
 
 ## 2. 健康检查接口
 ### 接口名称
@@ -30,7 +30,26 @@
 }
 ```
 
-## 3. 肥胖风险预测接口
+## 3. 训练摘要接口
+### 接口名称
+训练摘要
+
+### 请求路径
+`/api/v1/dashboard`
+
+### 请求方式
+`GET`
+
+### 请求参数
+无
+
+### 返回参数
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| success | boolean | 是否返回成功 |
+| data | object | 训练摘要、模型对比和产物索引 |
+
+## 4. 肥胖风险预测接口
 ### 接口名称
 肥胖等级预测
 
@@ -64,43 +83,71 @@
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
 | success | boolean | 请求是否成功 |
+| sklearn | object | `sklearn` 推理结果（若训练产物存在） |
+| manual | object | 手搓模型推理结果（若训练产物存在） |
+
+### `sklearn` 返回结构
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| logistic_regression | object | 逻辑回归预测结果 |
+| mlp_classifier | object | 多层感知机预测结果 |
+| recommended_result | string | 推荐输出结果 |
+| recommended_model | string | 推荐模型名称 |
+
+### `manual` 返回结构
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
 | logistic_regression | object | 逻辑回归预测结果 |
 | neural_network | object | 神经网络预测结果 |
-| recommended_result | string | 推荐输出结果（默认取神经网络） |
 
 ### 返回示例
 ```json
 {
   "success": true,
-  "logistic_regression": {
-    "prediction": "Overweight_Level_II",
-    "probabilities": {
-      "Insufficient_Weight": 0.017662,
-      "Normal_Weight": 0.071175,
-      "Obesity_Type_I": 0.263551,
-      "Obesity_Type_II": 0.050871,
-      "Obesity_Type_III": 0.000763,
-      "Overweight_Level_I": 0.254614,
-      "Overweight_Level_II": 0.341365
-    }
+  "sklearn": {
+    "logistic_regression": {
+      "prediction": "Overweight_Level_II",
+      "probabilities": {
+        "Insufficient_Weight": 0.017662,
+        "Normal_Weight": 0.071175,
+        "Obesity_Type_I": 0.263551,
+        "Obesity_Type_II": 0.050871,
+        "Obesity_Type_III": 0.000763,
+        "Overweight_Level_I": 0.254614,
+        "Overweight_Level_II": 0.341365
+      },
+      "best_parameters": {}
+    },
+    "mlp_classifier": {
+      "prediction": "Overweight_Level_II",
+      "probabilities": {
+        "Insufficient_Weight": 0.040851,
+        "Normal_Weight": 0.086343,
+        "Obesity_Type_I": 0.245368,
+        "Obesity_Type_II": 0.022271,
+        "Obesity_Type_III": 0.000646,
+        "Overweight_Level_I": 0.252378,
+        "Overweight_Level_II": 0.352142
+      },
+      "best_parameters": {}
+    },
+    "recommended_result": "Overweight_Level_II",
+    "recommended_model": "mlp_classifier"
   },
-  "neural_network": {
-    "prediction": "Overweight_Level_II",
-    "probabilities": {
-      "Insufficient_Weight": 0.040851,
-      "Normal_Weight": 0.086343,
-      "Obesity_Type_I": 0.245368,
-      "Obesity_Type_II": 0.022271,
-      "Obesity_Type_III": 0.000646,
-      "Overweight_Level_I": 0.252378,
-      "Overweight_Level_II": 0.352142
+  "manual": {
+    "logistic_regression": {
+      "prediction": "Overweight_Level_II",
+      "probabilities": {}
+    },
+    "neural_network": {
+      "prediction": "Overweight_Level_II",
+      "probabilities": {}
     }
-  },
-  "recommended_result": "Overweight_Level_II"
+  }
 }
 ```
 
-## 4. 错误码说明
+## 5. 错误码说明
 | HTTP 状态码 | 说明 | 场景 |
 | --- | --- | --- |
 | 200 | 请求成功 | 健康检查或预测成功 |
