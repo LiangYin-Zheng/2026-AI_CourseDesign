@@ -235,15 +235,15 @@ def main() -> None:
     arguments = parser.parse_args()
 
     if arguments.command in {'train', 'train-sklearn', 'train-manual'}:
-        progress = build_training_progress(config, arguments.command)
-        context = prepare_training_context(config, progress)
-        sklearn_summary = None
-        manual_summary = None
-        if arguments.command in {'train', 'train-sklearn'}:
-            sklearn_summary = run_sklearn_training_pipeline(config, context, progress)
-        if arguments.command in {'train', 'train-manual'}:
-            manual_summary = run_manual_training_pipeline(config, context, progress)
-        finalize_training_outputs(config, context, sklearn_summary, manual_summary, progress)
+        with build_training_progress(config, arguments.command) as progress:
+            context = prepare_training_context(config, progress)
+            sklearn_summary = None
+            manual_summary = None
+            if arguments.command in {'train', 'train-sklearn'}:
+                sklearn_summary = run_sklearn_training_pipeline(config, context, progress)
+            if arguments.command in {'train', 'train-manual'}:
+                manual_summary = run_manual_training_pipeline(config, context, progress)
+            finalize_training_outputs(config, context, sklearn_summary, manual_summary, progress)
     elif arguments.command in {'serve-web', 'serve'}:
         run_server(arguments.host, arguments.port)
     elif arguments.command == 'gui-local':
