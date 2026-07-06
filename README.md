@@ -17,7 +17,7 @@
 ## 项目特性
 
 - **双训练路线**：同时支持 `sklearn` 模型族与手搓多分类模型族。
-- **双界面模式**：支持本地桌面界面和本地 HTTP Web 界面，两条界面链路在 `src/` 中明确分离。
+- **双界面模式**：支持本地桌面界面和本地 HTTPS Web 界面，两条界面链路在 `src/` 中明确分离。
 - **统一训练进度**：训练阶段重点展示“全流程百分比进度”，减少终端噪音。
 - **参数摘要输出**：训练完成后统一输出各模型优化后的关键参数。
 - **项目级日志体系**：基于 `loguru` 的统一日志模块，支持终端和文件双输出、`DEBUG/INFO/NOTICE/WARNING/ERROR/CRITICAL` 分级、日志轮转与保留策略；未安装时自动回退到标准库 `logging`。
@@ -61,7 +61,7 @@ flowchart LR
     E1 --> F[output/ 模型、图表、报告、日志]
     E2 --> F
     F --> G1[interfaces/desktop 本地桌面 GUI]
-    F --> G2[interfaces/web 本地 HTTP Web GUI]
+    F --> G2[interfaces/web 本地 HTTPS Web GUI]
 ```
 
 ## 快速开始
@@ -120,9 +120,9 @@ python main.py gui-local
 - 不想额外打开浏览器或启动本地 Web 服务
 - 需要更明确地区分“桌面模式”和“网页模式”
 
-### 方式二：本地 Web 界面（HTTP）
+### 方式二：本地 Web 界面（HTTPS）
 
-这个模式会启动本地 HTTP 服务，然后在浏览器中查看页面。
+这个模式会启动本地 HTTPS 服务，然后在浏览器中查看页面。默认使用临时自签证书，适合本地演示。
 
 ```bash
 python main.py serve-web --host 127.0.0.1 --port 8000
@@ -137,11 +137,11 @@ python main.py serve --host 127.0.0.1 --port 8000
 启动后访问：
 
 ```text
-http://127.0.0.1:8000
+https://127.0.0.1:8000
 ```
 
 > [!NOTE]
-> 这里默认提供的是**本地 HTTP 演示服务**，不是 HTTPS 部署。对于课程设计、本地展示和实验复现，这种方式已经足够直观，也更轻量。
+> 这里默认提供的是**本地 HTTPS 演示服务**，使用临时自签证书。对于课程设计、本地展示和实验复现，这种方式已经足够直观，也更轻量。
 
 ## 单条样本预测
 
@@ -213,7 +213,7 @@ python -m unittest tests/test_project_pipeline.py tests/test_sklearn_pipeline.py
 
 ## 当前已知边界
 
-- Web 服务默认是本地 HTTP 演示模式，不包含生产级 HTTPS 部署配置。
+- Web 服务默认是本地 HTTPS 演示模式，使用临时自签证书，不包含生产级证书托管配置。
 - README 提供的是通用根目录命令，具体 Python 环境由使用者自行选择。
 - `src/legacy/flat_layout/` 仅作历史归档，不建议在新开发中继续直接引用。
 
