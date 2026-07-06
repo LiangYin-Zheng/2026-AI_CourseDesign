@@ -358,7 +358,7 @@ def build_index_page(dashboard: Dict[str, Any]) -> str:
       document.getElementById('training-note').innerHTML = `
         <div><strong>训练路线：</strong>${{escapeHtml(overview.training_mode_label || '-')}}</div>
         <div style="margin-top:8px;"><strong>当前状态：</strong>${{escapeHtml(overview.training_status || data.status || '-')}}</div>
-        <div style="margin-top:8px;"><strong>说明：</strong>选择训练路线后点击“训练”，服务端会在本地启动对应的 `main.py` 命令。</div>
+        <div style="margin-top:8px;"><strong>说明：</strong>选择训练路线后点击“训练”，服务端会在本地启动对应的 <code>main.py</code> 命令。</div>
       `;
 
       const statusLines = [
@@ -375,7 +375,7 @@ def build_index_page(dashboard: Dict[str, Any]) -> str:
       if ((data.parameter_rows || []).length === 0) {{
         statusLines.push('- 暂无参数摘要，请先执行训练。');
       }}
-      document.getElementById('training-status').textContent = statusLines.join('\n');
+      document.getElementById('training-status').textContent = statusLines.join('\\n');
     }}
 
     function renderTrainingModes(data) {{
@@ -590,7 +590,7 @@ def build_index_page(dashboard: Dict[str, Any]) -> str:
         `摘要状态：${{data.status || '-' }}`,
         `最近训练：${{data.generated_at || '-' }}`,
         `训练路线：${{data.overview?.training_mode_label || '-' }}`,
-      ].join('\n');
+      ].join('\\n');
       renderPrediction({{success: true, message: '等待提交预测...'}});
     }}
 
