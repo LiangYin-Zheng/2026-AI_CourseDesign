@@ -125,6 +125,7 @@ def run_local_gui() -> None:
             result_text.configure(state=tk.DISABLED)
             logger.info('本地桌面界面完成一次预测请求。')
         except Exception as error:  # noqa: BLE001
+            logger.exception('本地桌面界面预测失败。')
             messagebox.showerror('预测失败', str(error))
 
     action_frame = ttk.Frame(container)

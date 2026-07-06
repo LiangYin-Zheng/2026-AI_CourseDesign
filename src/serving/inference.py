@@ -48,7 +48,7 @@ def load_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     try:
         sklearn_bundle = load_sklearn_inference_bundle(config)
     except FileNotFoundError:
-        logger.info('未检测到 sklearn 推理模型文件。')
+        logger.warning('未检测到 sklearn 推理模型文件。')
     return {'sklearn': sklearn_bundle, 'manual': load_manual_inference_bundle(config)}
 
 
@@ -117,4 +117,3 @@ def predict_single(payload: Dict[str, Any], config: Dict[str, Any], bundle: Dict
     if 'sklearn' not in result and 'manual' not in result:
         raise ValueError('未检测到可用模型，请先执行训练。')
     return result
-

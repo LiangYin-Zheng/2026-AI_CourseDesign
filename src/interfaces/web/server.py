@@ -71,23 +71,28 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any], dashb
             if parsed_path.path.startswith('/artifacts/'):
                 artifact_path = self._resolve_artifact(parsed_path.path)
                 if artifact_path is None:
+                    logger.warning('未找到请求资源：path=%s | client=%s', parsed_path.path, self.address_string())
                     self.send_json({'success': False, 'message': '未找到请求资源'}, status_code=404)
                     return
                 self.send_file(artifact_path)
                 return
+            logger.warning('未找到请求资源：path=%s | client=%s', parsed_path.path, self.address_string())
             self.send_json({'success': False, 'message': '未找到请求资源'}, status_code=404)
 
         def do_POST(self) -> None:  # noqa: N802
             if self.path != '/api/v1/predict':
+                logger.warning('未找到请求资源：path=%s | client=%s', self.path, self.address_string())
                 self.send_json({'success': False, 'message': '未找到请求资源'}, status_code=404)
                 return
             content_length = int(self.headers.get('Content-Length', '0'))
             request_body = self.rfile.read(content_length).decode('utf-8')
             try:
+                logger.info('收到预测请求：path=%s | client=%s', self.path, self.address_string())
                 payload = json.loads(request_body)
                 result = predict_single(payload, config, bundle)
                 self.send_json(result)
             except Exception as error:  # noqa: BLE001
+                logger.exception('预测失败：path=%s | client=%s', self.path, self.address_string())
                 self.send_json({'success': False, 'message': f'预测失败：{error}'}, status_code=400)
 
         def log_message(self, format_string: str, *args: Any) -> None:
@@ -105,4 +110,3 @@ def run_server(host: str = '127.0.0.1', port: int = 8000) -> None:
     server = ThreadingHTTPServer((host, port), handler)
     logger.info('Web 演示服务已启动：http://%s:%s', host, port)
     server.serve_forever()
-
