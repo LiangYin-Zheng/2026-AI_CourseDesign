@@ -17,7 +17,7 @@
 ## 项目特性
 
 - **双训练路线**：同时支持 `sklearn` 模型族与手搓多分类模型族。
-- **双界面模式**：支持本地桌面界面和本地 HTTP Web 界面，两条界面链路在 `src/` 中明确分离。
+- **双界面模式**：支持本地桌面界面和本地 HTTP Web 界面，两条界面链路分别位于 `src/interfaces/desktop/` 与 `src/interfaces/web/`。
 - **统一训练进度**：训练阶段重点展示“全流程百分比进度”，减少终端噪音。
 - **参数摘要输出**：训练完成后统一输出各模型优化后的关键参数。
 - **项目级日志体系**：基于 `loguru` 的统一日志模块，支持终端和文件双输出、`DEBUG/INFO/NOTICE/WARNING/ERROR/CRITICAL` 分级、日志轮转与保留策略；未安装时自动回退到标准库 `logging`。
@@ -102,6 +102,12 @@ python main.py train-sklearn
 
 ```bash
 python main.py train-manual
+```
+
+如果只想查看命令列表，可以运行：
+
+```bash
+python main.py --help
 ```
 
 ## 两种 GUI 使用方式
@@ -200,7 +206,7 @@ output/
 在仓库根目录执行：
 
 ```bash
-python -m unittest tests/test_project_pipeline.py tests/test_sklearn_pipeline.py
+python -m unittest tests/test_project_pipeline.py tests/test_sklearn_pipeline.py tests/test_progress.py -v
 ```
 
 ## 文档索引
@@ -215,7 +221,7 @@ python -m unittest tests/test_project_pipeline.py tests/test_sklearn_pipeline.py
 
 - Web 服务默认是本地 HTTP 演示模式，不包含生产级 HTTPS 部署配置。
 - README 提供的是通用根目录命令，具体 Python 环境由使用者自行选择。
-- `src/legacy/flat_layout/` 仅作历史归档，不建议在新开发中继续直接引用。
+- 单样本预测会同时尝试加载 `sklearn` 与手搓模型；如果训练只生成了其中一条链路，返回结果也会相应减少。
 
 ## Commit 提交规范
 格式：`<type>(<scope>): <description>`
