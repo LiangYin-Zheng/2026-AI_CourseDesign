@@ -8,13 +8,9 @@ import numpy as np
 
 
 # 写入 SVG 文本到目标文件
-
-# 写入 SVG 文本到目标文件
 def write_svg(path: str | Path, content: str) -> None:
     Path(path).write_text(content, encoding="utf-8")
 
-
-# 生成条形图 SVG
 
 # 生成条形图 SVG
 def save_bar_chart(labels: Sequence[str], values: Sequence[float], title: str, output_path: str | Path) -> None:
@@ -58,8 +54,6 @@ def save_bar_chart(labels: Sequence[str], values: Sequence[float], title: str, o
 
 
 # 生成直方图 SVG
-
-# 生成直方图 SVG
 def save_histogram(values: Iterable[float], bins: int, title: str, output_path: str | Path) -> None:
     # 先计算直方图分布，再复用条形图绘制
     array = np.asarray(list(values), dtype=float)
@@ -67,8 +61,6 @@ def save_histogram(values: Iterable[float], bins: int, title: str, output_path: 
     labels = [f"{edges[index]:.1f}-{edges[index + 1]:.1f}" for index in range(len(edges) - 1)]
     save_bar_chart(labels, counts.astype(float).tolist(), title, output_path)
 
-
-# 生成热力图 SVG
 
 # 生成热力图 SVG
 def save_heatmap(matrix: np.ndarray, row_labels: Sequence[str], col_labels: Sequence[str], title: str, output_path: str | Path) -> None:

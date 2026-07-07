@@ -18,7 +18,7 @@ from src.utils.file_utils import ensure_directory
 plt.rcParams["font.sans-serif"] = ["PingFang SC", "Hiragino Sans GB", "Arial Unicode MS", "SimHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
-
+# 统一保存图像的函数
 def save_figure(path: str | Path) -> None:
     # 统一保存图像并关闭画布
     target_path = Path(path)
@@ -27,7 +27,7 @@ def save_figure(path: str | Path) -> None:
     plt.savefig(target_path, dpi=160, bbox_inches="tight")
     plt.close()
 
-
+# 保存训练曲线
 def save_training_curve(history: List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
     # 绘制训练损失和验证指标曲线
     if not history:
@@ -50,7 +50,7 @@ def save_training_curve(history: List[Dict[str, Any]], output_path: str | Path, 
     plt.legend()
     save_figure(output_path)
 
-
+# 保存参数搜索进度
 def save_search_progress(search_history: List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
     # 绘制参数搜索过程
     if not search_history:
@@ -69,7 +69,7 @@ def save_search_progress(search_history: List[Dict[str, Any]], output_path: str 
     plt.legend()
     save_figure(output_path)
 
-
+# 保存混淆矩阵
 def save_confusion_matrix(
     matrix_or_y_true: List[List[int]] | np.ndarray,
     predictions_or_class_names: List[int] | List[str] | np.ndarray,
@@ -102,7 +102,7 @@ def save_confusion_matrix(
     plt.colorbar(fraction=0.046, pad=0.04)
     save_figure(output_path)
 
-
+# 保存多分类 ROC 曲线
 def save_multiclass_roc_curve(y_true: np.ndarray, probabilities: np.ndarray, class_names: List[str], output_path: str | Path, title: str) -> None:
     # 绘制多分类 ROC 曲线
     if probabilities.ndim != 2 or probabilities.shape[1] < 2:
@@ -121,7 +121,7 @@ def save_multiclass_roc_curve(y_true: np.ndarray, probabilities: np.ndarray, cla
     plt.legend(fontsize=8)
     save_figure(output_path)
 
-
+# 保存指标对比图
 def save_metric_comparison(model_results: Dict[str, Any] | List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
     # 将模型结果统一转成交叉对比图数据
     if isinstance(model_results, list):
@@ -133,7 +133,7 @@ def save_metric_comparison(model_results: Dict[str, Any] | List[Dict[str, Any]],
             rows.append({"name": model_name, "metrics": result["test_metrics"]})
     save_named_metric_bars(rows, output_path, title)
 
-
+# 保存命名指标柱状图
 def save_named_metric_bars(rows: List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
     # 按模型对比多个指标柱状图
     if not rows:
