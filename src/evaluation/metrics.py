@@ -9,19 +9,17 @@ from sklearn.preprocessing import label_binarize
 
 
 # 构建混淆矩阵
-
 def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     return sklearn_confusion_matrix(y_true, y_pred)
 
-
 # 计算分类评估指标
-
 def evaluate_predictions(
     y_true: np.ndarray,
     y_pred: np.ndarray,
     probabilities: np.ndarray | None = None,
     class_names: List[str] | None = None,
 ) -> Dict[str, float | list[list[int]]]:
+    # 先计算基础分类指标
     matrix = confusion_matrix(y_true, y_pred)
     accuracy = float(np.trace(matrix) / np.sum(matrix)) if np.sum(matrix) else 0.0
     precision, recall, f1_score, _ = precision_recall_fscore_support(
@@ -39,6 +37,7 @@ def evaluate_predictions(
         "confusion_matrix": matrix.tolist(),
     }
 
+    # 若提供概率矩阵，则补充多分类 AUC
     if probabilities is not None and class_names is not None and probabilities.ndim == 2 and probabilities.shape[1] == len(class_names):
         try:
             y_binary = label_binarize(y_true, classes=list(range(len(class_names))))

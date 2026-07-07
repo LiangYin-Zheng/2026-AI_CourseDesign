@@ -19,10 +19,12 @@ class TabularPreprocessor:
 
     # 拟合预处理器统计信息
     def fit(self, df: pd.DataFrame, target_column: str) -> "TabularPreprocessor":
+        # 初始化数值特征统计量
         self.numeric_means = {}
         self.numeric_stds = {}
         self.feature_names_ = []
 
+        # 统计数值特征的均值和标准差
         for column_name in self.numeric_features:
             column_values = df[column_name].astype(float)
             self.numeric_means[column_name] = float(column_values.mean())
@@ -30,23 +32,27 @@ class TabularPreprocessor:
             self.numeric_stds[column_name] = std_value if std_value > 1e-8 else 1.0
             self.feature_names_.append(column_name)
 
+        # 记录类别特征取值集合
         self.category_levels = {}
         for column_name in self.categorical_features:
             levels = sorted(df[column_name].astype(str).unique().tolist())
             self.category_levels[column_name] = levels
             self.feature_names_.extend([f"{column_name}__{level}" for level in levels])
 
+        # 记录标签类别顺序
         self.class_names = sorted(df[target_column].astype(str).unique().tolist())
         return self
 
     # 将 DataFrame 转换为模型输入矩阵
     def transform(self, df: pd.DataFrame) -> np.ndarray:
+        # 构建数值特征矩阵
         numeric_blocks: list[np.ndarray] = []
         for column_name in self.numeric_features:
             values = df[column_name].astype(float).to_numpy().reshape(-1, 1)
             standardized_values = (values - self.numeric_means[column_name]) / self.numeric_stds[column_name]
             numeric_blocks.append(standardized_values)
 
+        # 构建类别特征 one-hot 矩阵
         categorical_blocks: list[np.ndarray] = []
         for column_name in self.categorical_features:
             raw_values = df[column_name].astype(str).tolist()
@@ -61,6 +67,7 @@ class TabularPreprocessor:
 
     # 将标签列编码为整数索引
     def encode_target(self, labels: pd.Series) -> np.ndarray:
+        # 生成标签到索引的映射
         class_to_index = {class_name: index for index, class_name in enumerate(self.class_names)}
         return labels.astype(str).map(class_to_index).to_numpy(dtype=int)
 
@@ -70,6 +77,7 @@ class TabularPreprocessor:
 
     # 将模型概率字典化，便于接口直接输出
     def probabilities_to_dict(self, probabilities: np.ndarray) -> List[Dict[str, float]]:
+        # 按类别顺序组织概率输出
         result: List[Dict[str, float]] = []
         for row in probabilities:
             result.append({class_name: round(float(probability), 6) for class_name, probability in zip(self.class_names, row)})
@@ -77,6 +85,7 @@ class TabularPreprocessor:
 
     # 序列化预处理器元数据
     def to_dict(self) -> Dict[str, Any]:
+        # 导出为 JSON 友好的字典
         return {
             "numeric_features": self.numeric_features,
             "categorical_features": self.categorical_features,
@@ -90,6 +99,7 @@ class TabularPreprocessor:
     # 从元数据恢复预处理器
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TabularPreprocessor":
+        # 按保存的元数据重建实例
         processor = cls(
             numeric_features=data["numeric_features"],
             categorical_features=data["categorical_features"],

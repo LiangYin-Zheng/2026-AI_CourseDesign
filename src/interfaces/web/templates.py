@@ -4,7 +4,9 @@ import json
 from typing import Any, Dict
 
 
+# 构建首页 HTML
 def build_index_page(dashboard: Dict[str, Any]) -> str:
+    # 序列化 dashboard 数据
     dashboard_json = json.dumps(dashboard, ensure_ascii=False)
     sample_fields_json = json.dumps(dashboard.get('sample_fields', []), ensure_ascii=False)
     training_modes_json = json.dumps(dashboard.get('available_training_modes', []), ensure_ascii=False)

@@ -21,6 +21,7 @@ from src.utils.logger import get_logger
 logger = get_logger('serving-inference')
 
 
+# 加载 sklearn 推理产物
 def load_sklearn_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     sklearn_model_dir = Path(config['output_dirs']['models']) / 'sklearn'
     logistic_bundle = load_pickle(sklearn_model_dir / 'logistic_regression.pkl')
@@ -29,6 +30,7 @@ def load_sklearn_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     return {'logistic_regression': logistic_bundle, 'mlp_classifier': mlp_bundle, 'best_model_name': best_model_bundle['name']}
 
 
+# 加载手搓推理产物
 def load_manual_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any] | None:
     model_dir = Path(config['output_dirs']['models'])
     preprocessor_path = model_dir / 'preprocessor.json'
@@ -46,6 +48,7 @@ def load_manual_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any] | Non
     }
 
 
+# 合并加载可用推理产物
 def load_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     sklearn_bundle = None
     try:
@@ -55,6 +58,7 @@ def load_inference_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     return {'sklearn': sklearn_bundle, 'manual': load_manual_inference_bundle(config)}
 
 
+# 加载仪表盘摘要
 def load_dashboard_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     dashboard_path = Path(config['output_dirs']['evaluation']) / 'training_dashboard.json'
     if dashboard_path.exists():
@@ -78,6 +82,7 @@ def load_dashboard_bundle(config: Dict[str, Any]) -> Dict[str, Any]:
     }, config)
 
 
+# 使用 sklearn 模型预测
 def predict_with_sklearn(payload: Dict[str, Any], config: Dict[str, Any], sklearn_bundle: Dict[str, Any]) -> Dict[str, Any]:
     raw_frame = pd.DataFrame([payload])
     raw_frame[config['raw_target_column']] = 'Normal_Weight'
@@ -101,6 +106,7 @@ def predict_with_sklearn(payload: Dict[str, Any], config: Dict[str, Any], sklear
     return prediction_result
 
 
+# 使用手搓模型预测
 def predict_with_manual(payload: Dict[str, Any], config: Dict[str, Any], manual_bundle: Dict[str, Any]) -> Dict[str, Any]:
     raw_frame = pd.DataFrame([payload])
     raw_frame[config['raw_target_column']] = 'Normal_Weight'
@@ -120,6 +126,7 @@ def predict_with_manual(payload: Dict[str, Any], config: Dict[str, Any], manual_
     }
 
 
+# 执行单样本预测分发
 def predict_single(payload: Dict[str, Any], config: Dict[str, Any], bundle: Dict[str, Any]) -> Dict[str, Any]:
     payload = coerce_prediction_payload(payload)
     result: Dict[str, Any] = {'success': True}

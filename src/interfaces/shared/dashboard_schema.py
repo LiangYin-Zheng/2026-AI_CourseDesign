@@ -17,22 +17,26 @@ TRAINING_MODE_LABELS = {item['value']: item['label'] for item in TRAINING_MODE_O
 ARTIFACT_GROUP_NAMES = ('analysis', 'evaluation', 'figures', 'logs', 'models', 'predictions', 'reports')
 
 
+# 获取训练路线标签
 def get_training_mode_label(mode: str | None) -> str:
     return TRAINING_MODE_LABELS.get(mode or '', mode or '未知')
 
 
+# 统一数值精度
 def normalize_metric_value(value: Any) -> Any:
     if isinstance(value, float):
         return round(value, 6)
     return value
 
 
+# 规范化指标字典
 def normalize_metric_dict(metrics: Dict[str, Any] | None) -> Dict[str, Any]:
     if not metrics:
         return {'accuracy': None, 'macro_precision': None, 'macro_recall': None, 'macro_f1': None}
     return {key: normalize_metric_value(metrics.get(key)) for key in ('accuracy', 'macro_precision', 'macro_recall', 'macro_f1')}
 
 
+# 规范化对比行
 def normalize_comparison_rows(rows: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     normalized_rows: List[Dict[str, Any]] = []
     for row in rows:
@@ -44,6 +48,7 @@ def normalize_comparison_rows(rows: Iterable[Dict[str, Any]]) -> List[Dict[str, 
     return normalized_rows
 
 
+# 规范化参数行
 def normalize_parameter_rows(rows: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     normalized_rows: List[Dict[str, Any]] = []
     for row in rows:
@@ -55,6 +60,7 @@ def normalize_parameter_rows(rows: Iterable[Dict[str, Any]]) -> List[Dict[str, A
     return normalized_rows
 
 
+# 构建产物分组
 def build_artifact_groups(artifacts: Dict[str, List[str]]) -> List[Dict[str, Any]]:
     groups: List[Dict[str, Any]] = []
     for group_name in ARTIFACT_GROUP_NAMES:
@@ -70,6 +76,7 @@ def build_artifact_groups(artifacts: Dict[str, List[str]]) -> List[Dict[str, Any
     return groups
 
 
+# 构建图表分组
 def build_chart_groups(artifacts: Dict[str, List[str]]) -> List[Dict[str, Any]]:
     figures = list(artifacts.get('figures', []))
     grouped: Dict[str, List[str]] = {}
@@ -87,6 +94,7 @@ def build_chart_groups(artifacts: Dict[str, List[str]]) -> List[Dict[str, Any]]:
     ]
 
 
+# 构建仪表盘总览
 def build_overview(summary: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
     dataset = summary.get('dataset', {})
     recommended = summary.get('recommended_model', {})
@@ -111,6 +119,7 @@ def build_overview(summary: Dict[str, Any], config: Dict[str, Any]) -> Dict[str,
     }
 
 
+# 规范化仪表盘摘要
 def normalize_dashboard_summary(summary: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
     artifacts = summary.get('artifacts', {})
     log_files = list(artifacts.get('logs', []))

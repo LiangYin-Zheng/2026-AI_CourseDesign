@@ -19,18 +19,22 @@ from src.utils.logger import configure_project_logging, get_logger
 logger = get_logger('web-server')
 
 
+# 构建请求处理器
 def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any]) -> type[BaseHTTPRequestHandler]:
     artifact_root = Path(config['project_root']).resolve()
     allowed_training_modes = {item['value'] for item in TRAINING_MODE_OPTIONS}
 
+    # 后台启动训练命令
     def launch_training(mode: str) -> None:
         command = [sys.executable, str(Path(config['project_root']) / 'main.py'), mode]
         subprocess.Popen(command, cwd=config['project_root'])
 
+    # 读取最新 dashboard
     def current_dashboard() -> Dict[str, Any]:
         return load_dashboard_bundle(config)
 
     class PredictionHandler(BaseHTTPRequestHandler):
+        # 返回 JSON 响应
         def send_json(self, payload: Dict[str, Any], status_code: int = 200) -> None:
             response_body = json.dumps(payload, ensure_ascii=False).encode('utf-8')
             self.send_response(status_code)
@@ -39,6 +43,7 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any]) -> ty
             self.end_headers()
             self.wfile.write(response_body)
 
+        # 返回 HTML 响应
         def send_html(self, html_content: str) -> None:
             body = html_content.encode('utf-8')
             self.send_response(200)
@@ -47,6 +52,7 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any]) -> ty
             self.end_headers()
             self.wfile.write(body)
 
+        # 返回静态文件
         def send_file(self, file_path: Path) -> None:
             mime_type, _ = mimetypes.guess_type(str(file_path))
             body = file_path.read_bytes()
@@ -60,6 +66,7 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any]) -> ty
             self.end_headers()
             self.wfile.write(body)
 
+        # 解析产物路径
         def _resolve_artifact(self, raw_path: str) -> Path | None:
             relative_path = raw_path.removeprefix('/artifacts/')
             candidate = (artifact_root / unquote(relative_path)).resolve()
@@ -69,6 +76,7 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any]) -> ty
                 return None
             return candidate if candidate.is_file() else None
 
+        # 处理 GET 请求
         def do_GET(self) -> None:  # noqa: N802
             parsed_path = urlparse(self.path)
             if parsed_path.path == '/':
@@ -91,6 +99,7 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any]) -> ty
             logger.warning('未找到请求资源：path={} | client={}', parsed_path.path, self.address_string())
             self.send_json({'success': False, 'message': '未找到请求资源'}, status_code=404)
 
+        # 处理 POST 请求
         def do_POST(self) -> None:  # noqa: N802
             if self.path not in {'/api/v1/predict', '/api/v1/train'}:
                 logger.warning('未找到请求资源：path={} | client={}', self.path, self.address_string())
@@ -119,12 +128,14 @@ def create_request_handler(config: Dict[str, Any], bundle: Dict[str, Any]) -> ty
                 logger.exception('请求处理失败：path={} | client={}', self.path, self.address_string())
                 self.send_json({'success': False, 'message': f'处理失败：{error}'}, status_code=400)
 
+        # 统一访问日志格式
         def log_message(self, format_string: str, *args: Any) -> None:
             logger.info('{} - {}', self.address_string(), format_string % args)
 
     return PredictionHandler
 
 
+# 启动 Web 服务
 def run_server(host: str = '127.0.0.1', port: int = 8000) -> None:
     config = load_project_config()
     configure_project_logging(config['project_root'], relative_log_path=config['output_dirs']['logs'] + '/project.log')

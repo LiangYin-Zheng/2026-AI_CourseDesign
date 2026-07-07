@@ -7,8 +7,8 @@ import pandas as pd
 
 
 # 计算数值特征的类间区分度评分
-
 def calculate_numeric_separation_scores(df: pd.DataFrame, numeric_features: list[str], target_column: str) -> Dict[str, float]:
+    # 按特征逐个统计区分度
     scores: Dict[str, float] = {}
     for feature_name in numeric_features:
         overall_mean = float(df[feature_name].mean())
@@ -26,12 +26,13 @@ def calculate_numeric_separation_scores(df: pd.DataFrame, numeric_features: list
 
 
 # 构建探索性分析摘要
-
 def build_analysis_summary(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str, Any]:
+    # 读取分析相关配置
     target_column = config["target_column"]
     analysis_numeric_features = config["analysis_numeric_features"]
     categorical_features = config["categorical_features"]
 
+    # 汇总数值和类别特征信息
     numeric_summary = df[analysis_numeric_features].describe().round(4).to_dict()
     target_distribution = df[target_column].value_counts().to_dict()
     target_ratio = (df[target_column].value_counts(normalize=True) * 100).round(2).to_dict()
@@ -44,6 +45,7 @@ def build_analysis_summary(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str
             .to_dict()
         )
 
+    # 计算相关性和区分度
     correlation_matrix = df[analysis_numeric_features].corr().round(4).to_dict()
     separation_scores = calculate_numeric_separation_scores(df, analysis_numeric_features, target_column)
     top_features = list(separation_scores.items())[:5]
@@ -69,8 +71,8 @@ def build_analysis_summary(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str
 
 
 # 生成 Markdown 版 EDA 报告
-
 def render_analysis_markdown(summary: Dict[str, Any]) -> str:
+    # 逐段拼接报告内容
     lines = [
         "# 肥胖风险数据探索分析报告",
         "",

@@ -23,7 +23,9 @@ from src.utils.logger import configure_project_logging, get_logger
 logger = get_logger('desktop-gui')
 
 
+# 桌面端训练与预测控制台
 class DesktopTrainingConsole:
+    # 初始化界面状态
     def __init__(self) -> None:
         self.config = load_project_config()
         configure_project_logging(self.config['project_root'], relative_log_path=self.config['output_dirs']['logs'] + '/project.log')
@@ -45,6 +47,7 @@ class DesktopTrainingConsole:
         self._build_ui()
         self._render_dashboard()
 
+    # 构建主界面
     def _build_ui(self) -> None:
         container = ttk.Frame(self.root, padding=16)
         container.pack(fill=tk.BOTH, expand=True)
@@ -84,6 +87,7 @@ class DesktopTrainingConsole:
         self._build_prediction_tab()
         self._build_artifact_tab()
 
+    # 构建总览页
     def _build_overview_tab(self) -> None:
         self.overview_metric_frame = ttk.Frame(self.overview_tab)
         self.overview_metric_frame.pack(fill=tk.X, pady=(0, 12))
@@ -101,6 +105,7 @@ class DesktopTrainingConsole:
         self.training_status_text = scrolledtext.ScrolledText(right, wrap=tk.WORD, height=18)
         self.training_status_text.pack(fill=tk.BOTH, expand=True)
 
+    # 构建训练页
     def _build_training_tab(self) -> None:
         top = ttk.LabelFrame(self.training_tab, text='训练路线选择', padding=10)
         top.pack(fill=tk.X, pady=(0, 12))
@@ -123,6 +128,7 @@ class DesktopTrainingConsole:
         self.training_process_text = scrolledtext.ScrolledText(form_box, wrap=tk.WORD, height=18)
         self.training_process_text.pack(fill=tk.BOTH, expand=True)
 
+    # 构建对比页
     def _build_comparison_tab(self) -> None:
         split = ttk.PanedWindow(self.comparison_tab, orient=tk.HORIZONTAL)
         split.pack(fill=tk.BOTH, expand=True)
@@ -151,6 +157,7 @@ class DesktopTrainingConsole:
             self.parameter_tree.column(column, width=width, anchor=tk.W)
         self.parameter_tree.pack(fill=tk.BOTH, expand=True)
 
+    # 构建预测页
     def _build_prediction_tab(self) -> None:
         split = ttk.PanedWindow(self.prediction_tab, orient=tk.HORIZONTAL)
         split.pack(fill=tk.BOTH, expand=True)
@@ -194,6 +201,7 @@ class DesktopTrainingConsole:
         self.result_text.insert(tk.END, '等待提交预测...')
         self.result_text.configure(state=tk.DISABLED)
 
+    # 构建产物页
     def _build_artifact_tab(self) -> None:
         split = ttk.PanedWindow(self.artifact_tab, orient=tk.HORIZONTAL)
         split.pack(fill=tk.BOTH, expand=True)
@@ -220,6 +228,7 @@ class DesktopTrainingConsole:
         self.chart_hint = ttk.Label(self.chart_holder, text='选择图表文件后显示预览。')
         self.chart_hint.pack(anchor=tk.W)
 
+    # 刷新当前 dashboard
     def _render_dashboard(self) -> None:
         overview = self.dashboard.get('overview', {})
         self.status_var.set(self.dashboard.get('message', '训练摘要已加载。'))
@@ -234,6 +243,7 @@ class DesktopTrainingConsole:
         self._render_artifacts()
         self._render_chart_options()
 
+    # 渲染概览卡片
     def _render_overview_metrics(self, overview: Dict[str, Any]) -> None:
         for child in self.overview_metric_frame.winfo_children():
             child.destroy()
@@ -254,6 +264,7 @@ class DesktopTrainingConsole:
             ttk.Label(card, text=str(value), font=('Arial', 16, 'bold')).pack(anchor=tk.W, pady=(6, 0))
             self.overview_metric_frame.columnconfigure(index, weight=1)
 
+    # 渲染总览文本
     def _render_overview_text(self) -> None:
         overview = self.dashboard.get('overview', {})
         dataset = self.dashboard.get('dataset', {})
@@ -273,6 +284,7 @@ class DesktopTrainingConsole:
         ]
         self._replace_text(self.overview_text, '\n'.join(lines))
 
+    # 渲染训练说明与状态
     def _render_training_text(self) -> None:
         mode = self.training_mode_var.get()
         mode_label = next((item['label'] for item in TRAINING_MODE_OPTIONS if item['value'] == mode), mode)
@@ -301,6 +313,7 @@ class DesktopTrainingConsole:
             training_status_lines.append('- 暂无参数摘要，请先执行训练。')
         self._replace_text(self.training_process_text, '\n'.join(training_status_lines), readonly=False)
 
+    # 渲染模型对比表
     def _render_comparison(self) -> None:
         self._clear_tree(self.comparison_tree)
         rows = self.dashboard.get('comparison_rows', [])
@@ -318,6 +331,7 @@ class DesktopTrainingConsole:
                 metrics.get('macro_f1', '-'),
             ))
 
+    # 渲染参数表
     def _render_parameters(self) -> None:
         self._clear_tree(self.parameter_tree)
         rows = self.dashboard.get('parameter_rows', [])
@@ -331,6 +345,7 @@ class DesktopTrainingConsole:
                 json.dumps(row.get('parameters', {}), ensure_ascii=False),
             ))
 
+    # 渲染产物列表
     def _render_artifacts(self) -> None:
         self._clear_tree(self.artifact_tree)
         for group in self.dashboard.get('artifact_groups', []):
@@ -343,6 +358,7 @@ class DesktopTrainingConsole:
                 preview,
             ))
 
+    # 渲染图表选项
     def _render_chart_options(self) -> None:
         self.chart_list.delete(0, tk.END)
         chart_paths = []
@@ -359,6 +375,7 @@ class DesktopTrainingConsole:
         else:
             self._render_chart_preview(None)
 
+    # 渲染图表预览
     def _render_chart_preview(self, relative_path: str | None) -> None:
         for child in self.chart_holder.winfo_children():
             if child is not self.chart_hint:
@@ -387,6 +404,7 @@ class DesktopTrainingConsole:
         except Exception as error:  # noqa: BLE001
             self.chart_hint.configure(text=f'无法预览图表：{error}')
 
+    # 响应图表选择
     def _on_chart_select(self, _event: tk.Event[Any]) -> None:
         selection = self.chart_list.curselection()
         if not selection:
@@ -395,9 +413,11 @@ class DesktopTrainingConsole:
         if index < len(self._chart_paths):
             self._render_chart_preview(self._chart_paths[index])
 
+    # 响应产物选择
     def _on_artifact_select(self, _event: tk.Event[Any]) -> None:
         return
 
+    # 重新加载状态
     def reload_state(self) -> None:
         self.bundle = load_inference_bundle(self.config)
         self.dashboard = load_dashboard_bundle(self.config)
@@ -405,6 +425,7 @@ class DesktopTrainingConsole:
         self._render_dashboard()
         logger.info('桌面界面已刷新 dashboard。')
 
+    # 启动训练进程
     def launch_training(self) -> None:
         mode = self.training_mode_var.get()
         if mode == 'artifacts-only':
@@ -420,6 +441,7 @@ class DesktopTrainingConsole:
             logger.exception('启动训练失败。')
             messagebox.showerror('训练启动失败', str(error))
 
+    # 提交单样本预测
     def submit_prediction(self) -> None:
         try:
             payload = build_sample_payload({field_name: variable.get() for field_name, variable in self.form_vars.items()})
@@ -431,25 +453,30 @@ class DesktopTrainingConsole:
             logger.exception('本地桌面界面预测失败。')
             messagebox.showerror('预测失败', str(error))
 
+    # 导出当前 dashboard
     def export_dashboard(self) -> None:
         export_path = Path(self.config['output_dirs']['reports']) / 'desktop_dashboard_snapshot.json'
         write_json(export_path, self.dashboard)
         self.status_var.set(f'已导出：{export_path}')
         messagebox.showinfo('导出完成', str(export_path))
 
+    # 替换多行文本框内容
     def _replace_text(self, widget: scrolledtext.ScrolledText, content: str, readonly: bool = True) -> None:
         widget.configure(state=tk.NORMAL)
         widget.delete('1.0', tk.END)
         widget.insert(tk.END, content)
         widget.configure(state=tk.DISABLED if readonly else tk.NORMAL)
 
+    # 清空表格内容
     def _clear_tree(self, tree: ttk.Treeview) -> None:
         for child in tree.get_children():
             tree.delete(child)
 
+    # 运行桌面程序
     def run(self) -> None:
         self.root.mainloop()
 
 
+# 启动本地 GUI
 def run_local_gui() -> None:
     DesktopTrainingConsole().run()

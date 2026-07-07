@@ -9,6 +9,7 @@ import numpy as np
 ProgressCallback = Callable[[int, int, Dict[str, float]], None]
 
 
+# 计算 softmax 概率
 def softmax(logits: np.ndarray) -> np.ndarray:
     shifted_logits = logits - np.max(logits, axis=1, keepdims=True)
     exp_logits = np.exp(shifted_logits)
@@ -25,6 +26,7 @@ class SoftmaxLogisticRegression:
     bias: np.ndarray | None = None
     history: List[Dict[str, float]] = field(default_factory=list)
 
+    # 训练多分类逻辑回归
     def fit(
         self,
         X: np.ndarray,
@@ -33,6 +35,7 @@ class SoftmaxLogisticRegression:
         y_val: np.ndarray | None = None,
         progress_callback: ProgressCallback | None = None,
     ) -> 'SoftmaxLogisticRegression':
+        # 初始化参数和标签编码
         sample_count, feature_count = X.shape
         class_count = int(np.max(y)) + 1
         random_generator = np.random.default_rng(self.random_seed)
@@ -42,6 +45,7 @@ class SoftmaxLogisticRegression:
         self.history = []
         report_interval = max(1, self.epochs // 10)
 
+        # 进行梯度下降更新
         for epoch_index in range(self.epochs):
             with np.errstate(over='ignore', divide='ignore', invalid='ignore'):
                 logits = X @ self.weights + self.bias
@@ -63,6 +67,7 @@ class SoftmaxLogisticRegression:
                     progress_callback(epoch_index + 1, self.epochs, record)
         return self
 
+    # 计算训练损失
     def loss(self, X: np.ndarray, y: np.ndarray) -> float:
         probabilities = self.predict_proba(X)
         safe_probabilities = np.clip(probabilities, 1e-12, 1.0)
@@ -70,6 +75,7 @@ class SoftmaxLogisticRegression:
         regularization = 0.5 * self.reg_strength * float(np.sum(np.square(self.weights)))
         return float(negative_log_likelihood + regularization)
 
+    # 预测类别概率
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if self.weights is None or self.bias is None:
             raise ValueError('模型尚未训练，无法执行预测。')
@@ -77,9 +83,11 @@ class SoftmaxLogisticRegression:
             logits = X @ self.weights + self.bias
             return softmax(logits)
 
+    # 预测类别索引
     def predict(self, X: np.ndarray) -> np.ndarray:
         return np.argmax(self.predict_proba(X), axis=1)
 
+    # 导出模型状态
     def to_state(self) -> Dict[str, np.ndarray | float | int | list]:
         return {
             'learning_rate': self.learning_rate,
@@ -92,6 +100,7 @@ class SoftmaxLogisticRegression:
             'model_type': 'logistic_regression',
         }
 
+    # 从模型状态恢复实例
     @classmethod
     def from_state(cls, state: Dict[str, np.ndarray | float | int | list]) -> 'SoftmaxLogisticRegression':
         model = cls(

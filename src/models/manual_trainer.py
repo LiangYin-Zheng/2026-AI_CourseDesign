@@ -19,17 +19,20 @@ logger = get_logger('manual-trainer')
 ProgressAdvanceCallback = Callable[[str, str], None]
 
 
+# 统计手搓训练总步骤
 def count_manual_training_units(config: Dict[str, Any]) -> int:
     logistic_grid = list(product(*config['optimization_grids']['logistic_regression'].values()))
     neural_grid = list(product(*config['optimization_grids']['neural_network'].values()))
     return 4 + len(logistic_grid) + len(neural_grid)
 
 
+# 触发训练进度回调
 def _advance(progress_callback: ProgressAdvanceCallback | None, stage: str, detail: str = '') -> None:
     if progress_callback is not None:
         progress_callback(stage, detail)
 
 
+# 保存模型状态到 npz
 def save_model_state(model_path: str | Path, state: Dict[str, Any]) -> None:
     serializable_state: Dict[str, Any] = {}
     for key, value in state.items():
@@ -42,6 +45,7 @@ def save_model_state(model_path: str | Path, state: Dict[str, Any]) -> None:
     np.savez(model_path, **serializable_state)
 
 
+# 从 npz 恢复模型状态
 def load_model_state(model_path: str | Path) -> Dict[str, Any]:
     state: Dict[str, Any] = {}
     with np.load(model_path, allow_pickle=True) as data:
@@ -51,6 +55,7 @@ def load_model_state(model_path: str | Path) -> Dict[str, Any]:
     return state
 
 
+# 构建手搓逻辑回归模型
 def build_logistic_model(parameters: Dict[str, Any], random_seed: int) -> SoftmaxLogisticRegression:
     return SoftmaxLogisticRegression(
         learning_rate=float(parameters['learning_rate']),
@@ -60,6 +65,7 @@ def build_logistic_model(parameters: Dict[str, Any], random_seed: int) -> Softma
     )
 
 
+# 构建手搓神经网络模型
 def build_neural_network_model(parameters: Dict[str, Any], random_seed: int) -> SimpleNeuralNetwork:
     return SimpleNeuralNetwork(
         hidden_units=int(parameters['hidden_units']),
@@ -70,6 +76,7 @@ def build_neural_network_model(parameters: Dict[str, Any], random_seed: int) -> 
     )
 
 
+# 训练单个候选模型并评估
 def _fit_candidate(
     model_name: str,
     parameters: Dict[str, Any],
@@ -88,6 +95,7 @@ def _fit_candidate(
     return model, metrics
 
 
+# 执行参数网格搜索
 def tune_model(
     model_name: str,
     parameter_grid: Dict[str, list[Any]],
@@ -137,6 +145,7 @@ def tune_model(
     return best_parameters, best_metrics, search_history
 
 
+# 保存训练过程图表
 def save_manual_visualizations(training_summary: Dict[str, Any], figure_root: Path) -> None:
     comparison_models = [
         {'name': 'Baseline Logistic', 'metrics': training_summary['model_results']['baseline']['logistic_regression']['test_metrics']},
@@ -153,6 +162,7 @@ def save_manual_visualizations(training_summary: Dict[str, Any], figure_root: Pa
         save_training_curve(histories['neural_network'], figure_root / 'training' / 'manual_neural_training_curve.png', '手搓 Neural Network 训练曲线')
 
 
+# 生成手搓模型训练摘要文本
 def render_manual_report(training_summary: Dict[str, Any]) -> str:
     results = training_summary['model_results']
     return '\n'.join([
@@ -170,6 +180,7 @@ def render_manual_report(training_summary: Dict[str, Any]) -> str:
     ])
 
 
+# 训练全部手搓模型
 def train_all_models(
     datasets: Dict[str, pd.DataFrame],
     preprocessor: TabularPreprocessor,

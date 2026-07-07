@@ -27,7 +27,7 @@ from src.visualization.training_plots import save_named_metric_bars
 
 logger = get_logger('main')
 
-
+# 初始化输出目录结构
 def initialize_output_directories(config: Dict[str, Any]) -> None:
     for output_path in config['output_dirs'].values():
         ensure_directory(output_path)
@@ -41,7 +41,7 @@ def initialize_output_directories(config: Dict[str, Any]) -> None:
     ]:
         ensure_directory(extra_directory)
 
-
+# 计算训练流程总进度单位
 def build_training_progress(config: Dict[str, Any], command: str) -> WorkflowProgress:
     total_units = 4  # 数据准备 3 步 + 最终汇总 1 步
     if command in {'train', 'train-sklearn'}:
@@ -50,7 +50,7 @@ def build_training_progress(config: Dict[str, Any], command: str) -> WorkflowPro
         total_units += count_manual_training_units(config)
     return WorkflowProgress(total_units=total_units, logger_name='training-progress')
 
-
+# 生成 EDA 图表
 def generate_eda_visualizations(clean_df, analysis_summary: Dict[str, Any], config: Dict[str, Any]) -> None:
     figure_dir = Path(config['output_dirs']['figures']) / 'eda'
     target_distribution = analysis_summary['target_distribution']
@@ -61,7 +61,7 @@ def generate_eda_visualizations(clean_df, analysis_summary: Dict[str, Any], conf
     correlation_matrix = clean_df[numeric_features].corr().to_numpy(dtype=float)
     save_heatmap(correlation_matrix, numeric_features, numeric_features, '核心数值特征相关性热力图', figure_dir / 'correlation_heatmap.svg')
 
-
+#  准备训练所需上下文数据
 def prepare_training_context(config: Dict[str, Any], progress: WorkflowProgress) -> Dict[str, Any]:
     raw_df = load_dataset(config['data_path'])
     clean_df = clean_dataset(raw_df, config)
@@ -78,20 +78,20 @@ def prepare_training_context(config: Dict[str, Any], progress: WorkflowProgress)
     progress.advance('数据集切分', f"train={len(datasets['train'])} | validation={len(datasets['validation'])} | test={len(datasets['test'])}")
     return {'raw_df': raw_df, 'clean_df': clean_df, 'analysis_summary': analysis_summary, 'datasets': datasets}
 
-
+# 构建手搓模型所需的预处理器
 def build_preprocessor(config: Dict[str, Any], datasets: Dict[str, Any]) -> TabularPreprocessor:
     preprocessor = TabularPreprocessor(numeric_features=config['numeric_features'], categorical_features=config['categorical_features'])
     preprocessor.fit(datasets['train'], config['target_column'])
     return preprocessor
 
-
+# 执行 sklearn 训练链路
 def run_sklearn_training_pipeline(config: Dict[str, Any], context: Dict[str, Any], progress: WorkflowProgress) -> Dict[str, Any]:
     logger.debug('sklearn 训练链路启动。')
     training_summary = train_sklearn_models(context['datasets'], config, progress_callback=progress.advance)
     save_model_report(Path(config['output_dirs']['reports']) / 'sklearn_family_report.md', training_summary['model_results'], family_name='sklearn 模型')
     return training_summary
 
-
+# 执行手搓训练链路
 def run_manual_training_pipeline(config: Dict[str, Any], context: Dict[str, Any], progress: WorkflowProgress) -> Dict[str, Any]:
     logger.debug('手搓训练链路启动。')
     preprocessor = build_preprocessor(config, context['datasets'])
@@ -99,7 +99,7 @@ def run_manual_training_pipeline(config: Dict[str, Any], context: Dict[str, Any]
     save_model_report(Path(config['output_dirs']['reports']) / 'manual_family_report.md', training_summary['model_results'], family_name='手搓模型')
     return training_summary
 
-
+# 收集已生成的产物路径
 def _collect_artifacts(config: Dict[str, Any]) -> Dict[str, list[str]]:
     artifact_map: Dict[str, list[str]] = {}
     for name, directory in config['output_dirs'].items():
@@ -110,7 +110,7 @@ def _collect_artifacts(config: Dict[str, Any]) -> Dict[str, list[str]]:
         artifact_map[name] = sorted(str(path.resolve().relative_to(Path(config['project_root']).resolve())) for path in base_path.rglob('*') if path.is_file())
     return artifact_map
 
-
+# 构建训练仪表盘摘要
 def build_dashboard_summary(
     config: Dict[str, Any],
     context: Dict[str, Any],
@@ -163,7 +163,7 @@ def build_dashboard_summary(
         'artifacts': _collect_artifacts(config),
     }
 
-
+# 打印参数汇总
 def log_parameter_summary(parameter_tables: list[dict[str, Any]]) -> None:
     if not parameter_tables:
         return
@@ -171,7 +171,7 @@ def log_parameter_summary(parameter_tables: list[dict[str, Any]]) -> None:
     for row in parameter_tables:
         logger.info('  {}/{} -> {}', row['family'], row['name'], format_kv_pairs(row['parameters']))
 
-
+# 写出最终训练产物
 def finalize_training_outputs(
     config: Dict[str, Any],
     context: Dict[str, Any],
@@ -207,7 +207,7 @@ def finalize_training_outputs(
     )
     return normalized_dashboard
 
-
+# 执行单样本预测命令
 def run_prediction_command(json_text: str | None, payload_file: str | None) -> None:
     if not json_text and not payload_file:
         raise ValueError('predict 命令必须提供 --json 或 --payload-file。')
@@ -220,7 +220,7 @@ def run_prediction_command(json_text: str | None, payload_file: str | None) -> N
     result = predict_single(payload, config, bundle)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
-
+# 构建命令行参数解析器
 def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='肥胖风险预测系统主入口')
     subparsers = parser.add_subparsers(dest='command', required=True)
@@ -243,7 +243,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     predict_parser.add_argument('--payload-file', dest='payload_file', default=None)
     return parser
 
-
+# 主函数入口
 def main() -> None:
     config = load_project_config()
     initialize_output_directories(config)
@@ -270,6 +270,6 @@ def main() -> None:
     elif arguments.command == 'predict':
         run_prediction_command(arguments.json_text, arguments.payload_file)
 
-
+# 运行主函数
 if __name__ == '__main__':
     main()

@@ -21,10 +21,12 @@ class WorkflowProgress:
     _bar_cm: Any = field(init=False, repr=False, default=None)
     _bar: Any = field(init=False, repr=False, default=None)
 
+    # 初始化进度条
     def __post_init__(self) -> None:
         self._logger = get_logger(self.logger_name)
         self._open_bar()
 
+    # 推进一个步骤
     def advance(self, stage: str, detail: str = '') -> None:
         self.completed_units += 1
         extra = stage if not detail else f'{stage} | {detail}'
@@ -49,6 +51,7 @@ class WorkflowProgress:
             suffix,
         )
 
+    # 关闭进度条
     def close(self) -> None:
         if self._bar_cm is None:
             return
@@ -56,6 +59,7 @@ class WorkflowProgress:
         self._bar_cm = None
         self._bar = None
 
+    # 打开 alive_progress 进度条
     def _open_bar(self) -> None:
         if alive_bar is None:
             return
@@ -69,8 +73,10 @@ class WorkflowProgress:
         )
         self._bar = self._bar_cm.__enter__()
 
+    # 支持 with 语法
     def __enter__(self) -> WorkflowProgress:
         return self
 
+    # 退出时自动关闭
     def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
         self.close()

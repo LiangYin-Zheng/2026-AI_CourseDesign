@@ -11,12 +11,14 @@ DEFAULT_METRIC_KEYS = ('accuracy', 'macro_precision', 'macro_recall', 'macro_f1'
 DEFAULT_RESULT_SECTIONS = ('baseline', 'optimized')
 
 
+# 将空值格式化为短横线
 def _format_cell(value: Any) -> str:
     if value is None:
         return '-'
     return str(value)
 
 
+# 渲染 Markdown 表格
 def render_markdown_table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> str:
     if not headers:
         raise ValueError('表头不能为空。')
@@ -26,7 +28,9 @@ def render_markdown_table(headers: Sequence[str], rows: Sequence[Sequence[Any]])
     return '\n'.join([header_line, separator_line, *body_lines])
 
 
+# 渲染模型指标表
 def render_metrics_table(result_group: Mapping[str, Any], metric_keys: Sequence[str] = DEFAULT_METRIC_KEYS, model_header: str = '模型') -> str:
+    # 生成表头和每行指标
     headers = [model_header, *metric_keys]
     rows = []
     for model_name, result in result_group.items():
@@ -35,6 +39,7 @@ def render_metrics_table(result_group: Mapping[str, Any], metric_keys: Sequence[
     return render_markdown_table(headers, rows)
 
 
+# 生成默认章节标题
 def _default_section_title(section_name: str, family_name: str) -> str:
     if section_name == 'baseline':
         return f'{family_name}基线模型结果'
@@ -43,6 +48,7 @@ def _default_section_title(section_name: str, family_name: str) -> str:
     return f'{section_name}结果'
 
 
+# 渲染模型训练报告
 def render_model_report(
     model_results: Mapping[str, Mapping[str, Any]],
     family_name: str = '模型',
@@ -75,6 +81,7 @@ def render_model_report(
     return '\n'.join(lines)
 
 
+# 渲染家族对比报告
 def render_family_comparison_report(
     summary: Mapping[str, Any],
     title: str = '模型对比报告',
@@ -114,5 +121,6 @@ def render_family_comparison_report(
     return '\n'.join(lines)
 
 
+# 保存模型报告到文件
 def save_model_report(output_path: str, model_results: Mapping[str, Mapping[str, Any]], family_name: str = '模型') -> None:
     write_text(output_path, render_model_report(model_results, family_name=family_name))

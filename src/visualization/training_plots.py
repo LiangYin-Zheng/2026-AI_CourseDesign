@@ -20,6 +20,7 @@ plt.rcParams["axes.unicode_minus"] = False
 
 
 def save_figure(path: str | Path) -> None:
+    # 统一保存图像并关闭画布
     target_path = Path(path)
     ensure_directory(target_path.parent)
     plt.tight_layout()
@@ -28,6 +29,7 @@ def save_figure(path: str | Path) -> None:
 
 
 def save_training_curve(history: List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
+    # 绘制训练损失和验证指标曲线
     if not history:
         return
     epochs = [int(item["epoch"]) for item in history]
@@ -50,6 +52,7 @@ def save_training_curve(history: List[Dict[str, Any]], output_path: str | Path, 
 
 
 def save_search_progress(search_history: List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
+    # 绘制参数搜索过程
     if not search_history:
         return
     steps = [int(item["step"]) for item in search_history]
@@ -74,6 +77,7 @@ def save_confusion_matrix(
     output_path_or_title: str | Path,
     title: str | None = None,
 ) -> None:
+    # 支持直接传入混淆矩阵或原始标签
     if title is None:
         matrix = np.asarray(matrix_or_y_true, dtype=float)
         class_names = predictions_or_class_names  # type: ignore[assignment]
@@ -100,6 +104,7 @@ def save_confusion_matrix(
 
 
 def save_multiclass_roc_curve(y_true: np.ndarray, probabilities: np.ndarray, class_names: List[str], output_path: str | Path, title: str) -> None:
+    # 绘制多分类 ROC 曲线
     if probabilities.ndim != 2 or probabilities.shape[1] < 2:
         return
     y_binary = label_binarize(y_true, classes=list(range(len(class_names))))
@@ -118,6 +123,7 @@ def save_multiclass_roc_curve(y_true: np.ndarray, probabilities: np.ndarray, cla
 
 
 def save_metric_comparison(model_results: Dict[str, Any] | List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
+    # 将模型结果统一转成交叉对比图数据
     if isinstance(model_results, list):
         rows = model_results
     else:
@@ -129,6 +135,7 @@ def save_metric_comparison(model_results: Dict[str, Any] | List[Dict[str, Any]],
 
 
 def save_named_metric_bars(rows: List[Dict[str, Any]], output_path: str | Path, title: str) -> None:
+    # 按模型对比多个指标柱状图
     if not rows:
         return
     metric_names = ["accuracy", "macro_precision", "macro_recall", "macro_f1"]

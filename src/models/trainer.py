@@ -15,7 +15,6 @@ from src.utils.file_utils import write_json
 
 
 # 将模型状态写入 NPZ 文件，便于后续服务加载
-
 def save_model_state(model_path: str | Path, state: Dict[str, Any]) -> None:
     serializable_state: Dict[str, Any] = {}
     for key, value in state.items():
@@ -29,7 +28,6 @@ def save_model_state(model_path: str | Path, state: Dict[str, Any]) -> None:
 
 
 # 从 NPZ 文件恢复模型状态字典
-
 def load_model_state(model_path: str | Path) -> Dict[str, Any]:
     state: Dict[str, Any] = {}
     with np.load(model_path, allow_pickle=True) as data:
@@ -43,7 +41,6 @@ def load_model_state(model_path: str | Path) -> Dict[str, Any]:
 
 
 # 构建逻辑回归模型实例
-
 def build_logistic_model(parameters: Dict[str, Any], random_seed: int) -> SoftmaxLogisticRegression:
     return SoftmaxLogisticRegression(
         learning_rate=float(parameters["learning_rate"]),
@@ -54,7 +51,6 @@ def build_logistic_model(parameters: Dict[str, Any], random_seed: int) -> Softma
 
 
 # 构建神经网络模型实例
-
 def build_neural_network_model(parameters: Dict[str, Any], random_seed: int) -> SimpleNeuralNetwork:
     return SimpleNeuralNetwork(
         hidden_units=int(parameters["hidden_units"]),
@@ -66,7 +62,6 @@ def build_neural_network_model(parameters: Dict[str, Any], random_seed: int) -> 
 
 
 # 使用验证集评估候选参数组合
-
 def tune_model(
     model_name: str,
     parameter_grid: Dict[str, list[Any]],
@@ -100,18 +95,19 @@ def tune_model(
 
 
 # 训练、评估并保存全部模型产物
-
 def train_all_models(
     datasets: Dict[str, pd.DataFrame],
     preprocessor: TabularPreprocessor,
     config: Dict[str, Any],
 ) -> Dict[str, Any]:
+    # 提取配置参数
     target_column = config["target_column"]
     random_seed = int(config["random_seed"])
     model_output_dir = Path(config["output_dirs"]["models"])
     evaluation_output_dir = Path(config["output_dirs"]["evaluation"])
     prediction_output_dir = Path(config["output_dirs"]["predictions"])
 
+    # 准备训练、验证和测试集
     X_train = preprocessor.transform(datasets["train"])
     y_train = preprocessor.encode_target(datasets["train"][target_column])
     X_validation = preprocessor.transform(datasets["validation"])
@@ -119,11 +115,13 @@ def train_all_models(
     X_test = preprocessor.transform(datasets["test"])
     y_test = preprocessor.encode_target(datasets["test"][target_column])
 
+    # 训练和评估逻辑回归模型
     baseline_logistic_parameters = config["baseline_models"]["logistic_regression"]
     baseline_logistic_model = build_logistic_model(baseline_logistic_parameters, random_seed)
     baseline_logistic_model.fit(X_train, y_train, X_validation, y_validation)
     baseline_logistic_metrics = evaluate_predictions(y_test, baseline_logistic_model.predict(X_test))
 
+    # 优化逻辑回归模型参数
     best_logistic_parameters, logistic_validation_metrics = tune_model(
         "logistic_regression",
         config["optimization_grids"]["logistic_regression"],
@@ -133,17 +131,20 @@ def train_all_models(
         y_validation,
         random_seed,
     )
+    # 训练最佳逻辑回归模型并评估测试集
     best_logistic_model = build_logistic_model(best_logistic_parameters, random_seed)
     best_logistic_model.fit(X_train, y_train, X_validation, y_validation)
     logistic_test_predictions = best_logistic_model.predict(X_test)
     logistic_test_probabilities = best_logistic_model.predict_proba(X_test)
     optimized_logistic_metrics = evaluate_predictions(y_test, logistic_test_predictions)
 
+    # 训练和评估神经网络模型
     baseline_neural_parameters = config["baseline_models"]["neural_network"]
     baseline_neural_model = build_neural_network_model(baseline_neural_parameters, random_seed)
     baseline_neural_model.fit(X_train, y_train, X_validation, y_validation)
     baseline_neural_metrics = evaluate_predictions(y_test, baseline_neural_model.predict(X_test))
 
+    # 优化神经网络模型参数
     best_neural_parameters, neural_validation_metrics = tune_model(
         "neural_network",
         config["optimization_grids"]["neural_network"],
@@ -159,6 +160,7 @@ def train_all_models(
     neural_test_probabilities = best_neural_model.predict_proba(X_test)
     optimized_neural_metrics = evaluate_predictions(y_test, neural_test_predictions)
 
+    # 保存模型状态、预处理器和评估结果
     model_results = {
         "baseline": {
             "logistic_regression": {
@@ -189,6 +191,7 @@ def train_all_models(
     write_json(model_output_dir / "preprocessor.json", preprocessor.to_dict())
     write_json(evaluation_output_dir / "model_results.json", model_results)
 
+    # 保存测试集预测结果
     prediction_frame = pd.DataFrame(
         {
             "actual_label": preprocessor.decode_target(y_test),
@@ -198,6 +201,7 @@ def train_all_models(
     )
     prediction_frame.to_csv(prediction_output_dir / "test_predictions.csv", index=False, encoding="utf-8-sig")
 
+    # 返回训练和评估结果
     return {
         "model_results": model_results,
         "best_models": {

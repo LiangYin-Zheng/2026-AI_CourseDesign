@@ -21,6 +21,7 @@ class SimpleNeuralNetwork:
     b2: np.ndarray | None = None
     history: List[Dict[str, float]] = field(default_factory=list)
 
+    # 训练单隐层神经网络
     def fit(
         self,
         X: np.ndarray,
@@ -29,6 +30,7 @@ class SimpleNeuralNetwork:
         y_val: np.ndarray | None = None,
         progress_callback: ProgressCallback | None = None,
     ) -> 'SimpleNeuralNetwork':
+        # 初始化参数和标签编码
         sample_count, feature_count = X.shape
         class_count = int(np.max(y)) + 1
         rng = np.random.default_rng(self.random_seed)
@@ -40,6 +42,7 @@ class SimpleNeuralNetwork:
         self.history = []
         report_interval = max(1, self.epochs // 10)
 
+        # 进行前向传播和反向传播更新
         for epoch_index in range(self.epochs):
             with np.errstate(over='ignore', divide='ignore', invalid='ignore'):
                 hidden_linear = X @ self.W1 + self.b1
@@ -71,6 +74,7 @@ class SimpleNeuralNetwork:
                     progress_callback(epoch_index + 1, self.epochs, record)
         return self
 
+    # 计算训练损失
     def loss(self, X: np.ndarray, y: np.ndarray) -> float:
         probabilities = self.predict_proba(X)
         safe_probabilities = np.clip(probabilities, 1e-12, 1.0)
@@ -78,6 +82,7 @@ class SimpleNeuralNetwork:
         regularization = 0.5 * self.l2_strength * (float(np.sum(np.square(self.W1))) + float(np.sum(np.square(self.W2))))
         return float(negative_log_likelihood + regularization)
 
+    # 预测类别概率
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if self.W1 is None or self.b1 is None or self.W2 is None or self.b2 is None:
             raise ValueError('模型尚未训练，无法执行预测。')
@@ -86,9 +91,11 @@ class SimpleNeuralNetwork:
             logits = hidden_activation @ self.W2 + self.b2
             return softmax(logits)
 
+    # 预测类别索引
     def predict(self, X: np.ndarray) -> np.ndarray:
         return np.argmax(self.predict_proba(X), axis=1)
 
+    # 导出模型状态
     def to_state(self) -> Dict[str, np.ndarray | float | int | list]:
         return {
             'hidden_units': self.hidden_units,
@@ -104,6 +111,7 @@ class SimpleNeuralNetwork:
             'model_type': 'neural_network',
         }
 
+    # 从模型状态恢复实例
     @classmethod
     def from_state(cls, state: Dict[str, np.ndarray | float | int | list]) -> 'SimpleNeuralNetwork':
         model = cls(

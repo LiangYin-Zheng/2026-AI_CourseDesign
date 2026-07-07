@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, Iterable, List
 
 
+# 格式化概率映射
 def format_probability_map(probabilities: Dict[str, Any]) -> List[Dict[str, Any]]:
     return [
         {'label': label, 'probability': round(float(value), 6)}
@@ -10,6 +11,7 @@ def format_probability_map(probabilities: Dict[str, Any]) -> List[Dict[str, Any]
     ]
 
 
+# 规范化一个分支结果
 def _normalize_branch(branch: Dict[str, Any]) -> Dict[str, Any]:
     model_rows = []
     for model_name, payload in branch.items():
@@ -30,6 +32,7 @@ def _normalize_branch(branch: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+# 规范化预测结果
 def normalize_prediction_result(result: Dict[str, Any]) -> Dict[str, Any]:
     normalized: Dict[str, Any] = {
         'success': bool(result.get('success', True)),
@@ -46,4 +49,3 @@ def normalize_prediction_result(result: Dict[str, Any]) -> Dict[str, Any]:
     if not normalized['success'] and 'error' in result:
         normalized['error'] = result['error']
     return normalized
-

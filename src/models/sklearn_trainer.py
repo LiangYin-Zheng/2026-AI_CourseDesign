@@ -35,17 +35,20 @@ logger = get_logger('sklearn-trainer')
 ProgressAdvanceCallback = Callable[[str, str], None]
 
 
+# 统计 sklearn 训练总步骤
 def count_sklearn_training_units(config: Dict[str, Any]) -> int:
     logistic_units = len(list(ParameterGrid(config['sklearn_models']['optimization_grids']['logistic_regression'])))
     mlp_units = len(list(ParameterGrid(config['sklearn_models']['optimization_grids']['mlp_classifier'])))
     return 4 + logistic_units + mlp_units
 
 
+# 触发训练进度回调
 def _advance(progress_callback: ProgressAdvanceCallback | None, stage: str, detail: str = '') -> None:
     if progress_callback is not None:
         progress_callback(stage, detail)
 
 
+# 保存 pickle 文件
 def save_pickle(path: str | Path, payload: Any) -> None:
     target_path = Path(path)
     ensure_directory(target_path.parent)
@@ -53,11 +56,13 @@ def save_pickle(path: str | Path, payload: Any) -> None:
         pickle.dump(payload, file)
 
 
+# 读取 pickle 文件
 def load_pickle(path: str | Path) -> Any:
     with Path(path).open('rb') as file:
         return pickle.load(file)
 
 
+# 训练 sklearn 逻辑回归
 def fit_logistic_model(
     X_train: np.ndarray,
     y_train: np.ndarray,
@@ -84,6 +89,7 @@ def fit_logistic_model(
     return model, metrics
 
 
+# 训练 sklearn MLP
 def fit_mlp_model(
     X_train: np.ndarray,
     y_train: np.ndarray,
@@ -137,12 +143,14 @@ def fit_mlp_model(
     }, history
 
 
+# 提取逻辑回归特征重要性
 def summarize_logistic_feature_importance(model: LogisticRegression, feature_names: List[str]) -> List[Dict[str, Any]]:
     coefficients = np.mean(np.abs(model.coef_), axis=0)
     top_indices = np.argsort(coefficients)[::-1][:12]
     return [{'feature': feature_names[index], 'importance': round(float(coefficients[index]), 6)} for index in top_indices]
 
 
+# 保存 sklearn 训练图表
 def save_sklearn_visualizations(training_summary: Dict[str, Any], training_figure_dir: Path, comparison_figure_dir: Path) -> None:
     comparison_models = [
         {'name': 'Baseline Logistic', 'metrics': training_summary['model_results']['baseline']['logistic_regression']['test_metrics']},
@@ -164,6 +172,7 @@ def save_sklearn_visualizations(training_summary: Dict[str, Any], training_figur
     save_multiclass_roc_curve(y_test, mlp_probabilities, training_summary['class_names'], training_figure_dir / 'sklearn_mlp_roc_curve.png', 'sklearn MLP ROC 曲线')
 
 
+# 生成 sklearn 训练摘要文本
 def render_sklearn_report(training_summary: Dict[str, Any]) -> str:
     results = training_summary['model_results']
     return '\n'.join([
@@ -181,6 +190,7 @@ def render_sklearn_report(training_summary: Dict[str, Any]) -> str:
     ])
 
 
+# 训练全部 sklearn 模型
 def train_sklearn_models(
     datasets: Dict[str, pd.DataFrame],
     config: Dict[str, Any],

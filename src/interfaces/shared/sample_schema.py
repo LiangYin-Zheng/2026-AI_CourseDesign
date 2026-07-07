@@ -27,6 +27,7 @@ FLOAT_FIELDS = {'age', 'height_m', 'weight_kg', 'vegetable_intake_score', 'main_
 SAMPLE_FIELD_NAMES = {field_name for field_name, *_ in FIELD_DEFINITIONS}
 
 
+# 转换单个字段值
 def coerce_value(field_name: str, raw_value: str) -> Any:
     if field_name in INTEGER_FIELDS:
         return int(float(raw_value))
@@ -35,14 +36,17 @@ def coerce_value(field_name: str, raw_value: str) -> Any:
     return raw_value
 
 
+# 兼容样本字段值转换
 def coerce_sample_value(field_name: str, raw_value: str) -> Any:
     return coerce_value(field_name, raw_value)
 
 
+# 根据字段值构建样本载荷
 def build_sample_payload(field_values: dict[str, str]) -> dict[str, Any]:
     return {field_name: coerce_value(field_name, raw_value) for field_name, raw_value in field_values.items()}
 
 
+# 规范化预测载荷
 def coerce_prediction_payload(payload: dict[str, Any]) -> dict[str, Any]:
     normalized_payload: dict[str, Any] = {}
     for field_name, raw_value in payload.items():

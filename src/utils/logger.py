@@ -16,6 +16,7 @@ _FILE_LOG_FORMAT = '{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {extra[compon
 _VISIBLE_CONSOLE_COMPONENTS = {'main', 'web-server', 'desktop-gui', 'serving-inference'}
 
 
+# 注册 NOTICE 日志级别
 def _install_notice_level() -> None:
     try:
         _loguru_logger.level('NOTICE')
@@ -23,15 +24,18 @@ def _install_notice_level() -> None:
         _loguru_logger.level('NOTICE', no=_NOTICE_LEVEL, color='<cyan>')
 
 
+# 提取组件名
 def _component_name(name: str) -> str:
     return name.split('.')[-1] if name else _NAMESPACE
 
 
+# 控制台日志过滤器
 def _should_show_in_console(record: dict[str, Any]) -> bool:
     component = record['extra'].get('component', '')
     return record['level'].no >= logging.WARNING or component in _VISIBLE_CONSOLE_COMPONENTS
 
 
+# 配置项目级日志
 def configure_project_logging(
     project_root: str | Path,
     relative_log_path: str = 'output/logs/project.log',
@@ -71,11 +75,13 @@ def configure_project_logging(
     return log_path
 
 
+# 获取统一 logger
 def get_logger(name: str):
     """获取统一命名空间下的 logger。"""
     full_name = name if name.startswith(_NAMESPACE) else f'{_NAMESPACE}.{name}'
     return _loguru_logger.bind(component=_component_name(full_name))
 
 
+# 格式化键值对
 def format_kv_pairs(payload: Mapping[str, Any]) -> str:
     return ' | '.join(f'{key}={value}' for key, value in payload.items())
