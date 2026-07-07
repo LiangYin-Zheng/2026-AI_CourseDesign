@@ -25,6 +25,14 @@ def calculate_numeric_separation_scores(df: pd.DataFrame, numeric_features: list
     return dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
 
 
+# 生成区分度结论
+def _build_key_findings(separation_scores: Dict[str, float], limit: int = 5) -> list[str]:
+    findings: list[str] = []
+    for index, (feature_name, score) in enumerate(list(separation_scores.items())[:limit], start=1):
+        findings.append(f"{feature_name} 的类间区分度评分为 {score}，在当前样本中排名第 {index}。")
+    return findings
+
+
 # 构建探索性分析摘要
 def build_analysis_summary(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str, Any]:
     # 读取分析相关配置
@@ -48,7 +56,6 @@ def build_analysis_summary(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str
     # 计算相关性和区分度
     correlation_matrix = df[analysis_numeric_features].corr().round(4).to_dict()
     separation_scores = calculate_numeric_separation_scores(df, analysis_numeric_features, target_column)
-    top_features = list(separation_scores.items())[:5]
 
     return {
         "overview": {
@@ -63,11 +70,33 @@ def build_analysis_summary(df: pd.DataFrame, config: Dict[str, Any]) -> Dict[str
         "categorical_profiles": categorical_profiles,
         "correlation_matrix": correlation_matrix,
         "numeric_separation_scores": separation_scores,
-        "key_findings": [
-            f"{feature_name} 的类间区分度评分为 {score}，说明其对肥胖等级划分具有较强解释力。"
-            for feature_name, score in top_features
-        ],
+        "key_findings": _build_key_findings(separation_scores),
     }
+
+
+# 生成结论摘要
+def _build_conclusion_lines(summary: Dict[str, Any]) -> list[str]:
+    lines = ["## 5. 结论摘要"]
+
+    separation_scores = list(summary.get("numeric_separation_scores", {}).items())
+    if separation_scores:
+        top_features = [feature_name for feature_name, _ in separation_scores[:3]]
+        joined_features = "、".join(top_features)
+        lines.append(f"- 当前区分度排名靠前的特征是 {joined_features}，后续建模应优先关注这些变量。")
+
+    target_ratios = summary.get("target_ratio_percent", {})
+    if target_ratios:
+        ratios = [float(value) for value in target_ratios.values()]
+        min_ratio = min(ratios)
+        max_ratio = max(ratios)
+        if max_ratio - min_ratio <= 10:
+            balance_text = "整体较均衡"
+        else:
+            balance_text = "存在一定偏斜"
+        lines.append(f"- 标签分布{balance_text}，占比范围为 {min_ratio:.2f}% 到 {max_ratio:.2f}%。")
+
+    lines.append("- 以上结论均基于当前样本统计结果，数据或训练结果变化时会自动同步更新。")
+    return lines
 
 
 # 生成 Markdown 版 EDA 报告
@@ -105,9 +134,6 @@ def render_analysis_markdown(summary: Dict[str, Any]) -> str:
 
     lines.extend([
         "",
-        "## 5. 结论摘要",
-        "- BMI、体重、年龄和运动相关特征与肥胖等级的差异最明显。",
-        "- 家族肥胖史、零食摄入和酒精摄入等行为特征对风险分层具有辅助判断价值。",
-        "- 数据分布整体较均衡，适合做多分类建模与对比实验。",
+        *_build_conclusion_lines(summary),
     ])
     return "\n".join(lines)
