@@ -39,6 +39,29 @@ def render_metrics_table(result_group: Mapping[str, Any], metric_keys: Sequence[
     return render_markdown_table(headers, rows)
 
 
+# 取优先用于解读的指标
+def _primary_metric_key(metric_keys: Sequence[str]) -> str:
+    return 'macro_f1' if 'macro_f1' in metric_keys else metric_keys[0]
+
+
+# 安全转换为浮点数
+def _as_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+# 计算指标变化
+def _metric_delta(current: float, baseline: Any) -> float | None:
+    baseline_value = _as_float(baseline)
+    if baseline_value is None:
+        return None
+    return current - baseline_value
+
+
 # 生成默认章节标题
 def _default_section_title(section_name: str, family_name: str) -> str:
     if section_name == 'baseline':
@@ -71,11 +94,35 @@ def render_model_report(
         ])
 
     if conclusion_lines is None:
+        primary_metric = _primary_metric_key(metric_keys)
+        optimized_results = model_results.get('optimized', {})
+        baseline_results = model_results.get('baseline', {})
+        ranked_models = []
+        for model_name, result in optimized_results.items():
+            metric_value = _as_float(result['test_metrics'].get(primary_metric))
+            if metric_value is not None:
+                ranked_models.append((model_name, metric_value))
+        ranked_models.sort(key=lambda item: item[1], reverse=True)
+        best_model_name = ranked_models[0][0] if ranked_models else None
+        best_metric_value = ranked_models[0][1] if ranked_models else None
         conclusion_lines = (
             '## 结果解读',
             '- 基线模型用于展示未经系统调参与优化时的效果。',
-            '- 优化模型优先比较测试集 Macro F1，用于反映多分类整体均衡能力。',
-            '- 汇报时建议同时说明准确率、Macro F1 与模型参数配置。',
+            *(
+                [
+                    f"- 当前优化后表现最好的模型是 {best_model_name}，测试集 {primary_metric}={best_metric_value:.4f}。"
+                ]
+                if best_model_name is not None and best_metric_value is not None
+                else ['- 当前没有可用于解读的优化结果。']
+            ),
+            *(
+                [
+                    f"- 相比基线，{best_model_name} 的 {primary_metric} 变化为 {_metric_delta(best_metric_value, baseline_results.get(best_model_name, {}).get('test_metrics', {}).get(primary_metric)):+.4f}。"
+                ]
+                if best_model_name is not None and best_metric_value is not None and _metric_delta(best_metric_value, baseline_results.get(best_model_name, {}).get('test_metrics', {}).get(primary_metric)) is not None
+                else []
+            ),
+            f"- 汇报时建议同时说明 Accuracy、Macro Precision、Macro Recall 与 {primary_metric.replace('_', ' ').title()}，便于解释差异来源。",
         )
     lines.extend(conclusion_lines)
     return '\n'.join(lines)
@@ -99,6 +146,16 @@ def render_family_comparison_report(
         ]
         for row in rows
     ]
+    primary_metric = _primary_metric_key(metric_keys)
+    ranked_rows = [
+        (row['family'], row['name'], _as_float(row['metrics'].get(primary_metric)))
+        for row in rows
+        if _as_float(row['metrics'].get(primary_metric)) is not None
+    ]
+    ranked_rows.sort(key=lambda item: item[2], reverse=True)
+    best_row = ranked_rows[0] if ranked_rows else None
+    runner_up = ranked_rows[1] if len(ranked_rows) > 1 else None
+    metric_label = primary_metric.replace('_', ' ').title()
     lines = [
         f'# {title}',
         '',
@@ -114,8 +171,29 @@ def render_family_comparison_report(
         render_markdown_table(headers, table_rows),
         '',
         '## 3. 建议',
-        '- 工程化路线更适合展示标准化训练、参数搜索和可重复实验流程。',
-        '- 手写实现更适合展示算法原理、梯度下降过程和课程设计实现能力。',
+        *(
+            [
+                f"- 当前最优模型是 {best_row[0]} / {best_row[1]}，{metric_label}={best_row[2]:.4f}。"
+            ]
+            if best_row
+            else ['- 当前没有足够的模型对比结果。']
+        ),
+        *(
+            [
+                f"- 与第二名相比，领先幅度为 {best_row[2] - runner_up[2]:.4f}，展示时应说明这个差距是否具有实际意义。"
+            ]
+            if best_row and runner_up
+            else []
+        ),
+        *(
+            [
+                '- 当前结果更适合优先展示 sklearn 路线的标准化训练与调参流程。'
+                if best_row and best_row[0] == 'sklearn'
+                else '- 当前结果更适合优先展示手搓路线的实现细节与原理说明。'
+            ]
+            if best_row
+            else []
+        ),
         '- 桌面 GUI 与 Web GUI 分离后，答辩时可分别展示“本地应用模式”和“网页演示模式”。',
     ]
     return '\n'.join(lines)
