@@ -16,7 +16,7 @@ from src.models.manual_trainer import load_model_state
 from src.models.neural_network import SimpleNeuralNetwork
 from src.models.sklearn_trainer import load_pickle
 from src.utils.file_utils import read_json
-from src.utils.logger import get_logger
+from src.log import get_logger
 
 logger = get_logger('serving-inference')
 

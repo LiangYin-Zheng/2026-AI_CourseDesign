@@ -20,7 +20,7 @@
 - **双界面模式**：支持本地桌面界面和本地 HTTP Web 界面，两条界面链路分别位于 `src/interfaces/desktop/` 与 `src/interfaces/web/`。
 - **统一训练进度**：训练阶段重点展示“全流程百分比进度”，减少终端噪音。
 - **参数摘要输出**：训练完成后统一输出各模型优化后的关键参数。
-- **项目级日志体系**：基于 `loguru` 的统一日志模块，支持终端和文件双输出、`DEBUG/INFO/NOTICE/WARNING/ERROR/CRITICAL` 分级、日志轮转与保留策略；未安装时自动回退到标准库 `logging`。
+- **项目级日志体系**：位于 `src/log/` 的统一日志模块，基于标准库 `logging` 封装终端和文件双输出、`DEBUG/INFO/NOTICE/WARNING/ERROR/CRITICAL` 分级、日志轮转与保留策略。
 - **结构化源码组织**：主实现已按模块归档。
 
 ## 现在的源码结构
@@ -36,7 +36,8 @@ src/
 │   └── web/                  # Web 页面与 HTTP 服务
 ├── models/                   # sklearn 模型、手搓模型、训练器
 ├── serving/                  # 共享推理与模型加载逻辑
-├── utils/                    # 日志、文件、进度等基础工具
+├── log/                      # 项目级日志模块
+├── utils/                    # 文件、进度等基础工具
 ├── visualization/            # 图表绘制
 └── config.py                 # 项目配置读取
 ```
@@ -192,7 +193,7 @@ output/logs/project.log
 1. **运行时终端日志**：重点展示整体进度、关键状态和异常告警。
 2. **文件日志**：写入 `output/logs/project.log`，记录更完整的项目运行信息，便于回溯和排错。
 
-当前实现使用 `loguru` 作为主日志方案，统一封装了项目级 logger、结构化组件字段、日志轮转和保留策略；如果当前环境尚未安装 `loguru`，程序会自动回退到标准库 `logging`，不会影响基本运行。
+当前实现位于 `src/log/project.py`，基于标准库 `logging` 统一封装了项目级 logger、结构化组件字段、日志轮转和保留策略。
 
 ## 训练产物会输出到哪里
 

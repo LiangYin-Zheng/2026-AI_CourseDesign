@@ -14,7 +14,7 @@ from src.config import load_project_config
 from src.interfaces.web.templates import build_index_page
 from src.interfaces.shared.dashboard_schema import TRAINING_MODE_OPTIONS
 from src.serving.inference import load_dashboard_bundle, load_inference_bundle, predict_single
-from src.utils.logger import configure_project_logging, get_logger
+from src.log import configure_project_logging, get_logger
 
 logger = get_logger('web-server')
 

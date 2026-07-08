@@ -18,7 +18,7 @@ from src.interfaces.shared.formatters import normalize_prediction_result
 from src.interfaces.shared.sample_schema import FIELD_DEFINITIONS, build_sample_payload
 from src.serving.inference import load_dashboard_bundle, load_inference_bundle, predict_single
 from src.utils.file_utils import write_json
-from src.utils.logger import configure_project_logging, get_logger
+from src.log import configure_project_logging, get_logger
 
 logger = get_logger('desktop-gui')
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.utils.logger import get_logger
+from src.log import get_logger
 
 try:  # pragma: no cover - 依赖是否安装取决于运行环境
     from alive_progress import alive_bar

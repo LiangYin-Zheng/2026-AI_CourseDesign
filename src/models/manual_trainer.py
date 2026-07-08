@@ -12,7 +12,7 @@ from src.features.preprocessor import TabularPreprocessor
 from src.models.logistic_regression import SoftmaxLogisticRegression
 from src.models.neural_network import SimpleNeuralNetwork
 from src.utils.file_utils import write_json, write_text
-from src.utils.logger import get_logger
+from src.log import get_logger
 from src.visualization.training_plots import save_metric_comparison, save_named_metric_bars, save_training_curve
 
 logger = get_logger('manual-trainer')

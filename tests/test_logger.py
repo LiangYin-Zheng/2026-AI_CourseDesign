@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.utils import logger as project_logger
+from src.log import project as project_logger
 
 
 class TestProjectLogger(unittest.TestCase):

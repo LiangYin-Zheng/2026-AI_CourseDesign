@@ -20,7 +20,7 @@ from src.models.manual_trainer import count_manual_training_units, train_all_mod
 from src.models.sklearn_trainer import count_sklearn_training_units, train_sklearn_models
 from src.serving.inference import load_inference_bundle, predict_single
 from src.utils.file_utils import ensure_directory, write_json, write_text
-from src.utils.logger import configure_project_logging, format_kv_pairs, get_logger
+from src.log import configure_project_logging, format_kv_pairs, get_logger
 from src.utils.progress import WorkflowProgress
 from src.visualization.svg_plotter import save_bar_chart, save_heatmap, save_histogram
 from src.visualization.training_plots import save_named_metric_bars
