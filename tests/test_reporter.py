@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from src.evaluation.reporter import render_family_comparison_report, render_model_report
+from src.reporting import render_family_comparison_report, render_model_report
 
 
 class TestReporter(unittest.TestCase):

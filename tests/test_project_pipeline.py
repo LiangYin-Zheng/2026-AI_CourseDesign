@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import unittest
 
-from src.config import load_project_config
+from src.core.config import load_project_config
 from src.data_processing.cleaner import clean_dataset
 from src.data_processing.loader import load_dataset
 from src.data_processing.splitter import stratified_split_dataframe
 from src.evaluation.metrics import evaluate_predictions
 from src.features.preprocessor import TabularPreprocessor
-from src.models.logistic_regression import SoftmaxLogisticRegression
-from src.models.neural_network import SimpleNeuralNetwork
+from src.models.manual_models import SimpleNeuralNetwork, SoftmaxLogisticRegression
 
 
 class TestProjectPipeline(unittest.TestCase):

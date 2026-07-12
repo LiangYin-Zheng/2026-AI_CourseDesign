@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from src.analysis.analyzer import render_analysis_markdown
+from src.reporting import render_analysis_markdown
 
 
 class TestAnalysisReport(unittest.TestCase):

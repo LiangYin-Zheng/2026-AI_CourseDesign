@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from src.config import load_project_config
+from src.core.config import load_project_config
 from src.data_processing.cleaner import clean_dataset
 from src.data_processing.loader import load_dataset
 from src.data_processing.splitter import stratified_split_dataframe
