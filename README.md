@@ -1,6 +1,6 @@
 # 肥胖风险预测系统设计
 
-一个面向《人工智能综合实践 / 课程设计》的完整机器学习项目示例。项目围绕肥胖风险预测展开，覆盖了**数据清洗、探索性分析、`sklearn` 建模、手搓模型实现、训练结果可视化、日志管理、桌面 GUI 与 Web GUI 演示**等完整流程。
+一个面向《人工智能综合实践 / 课程设计》的完整机器学习项目示例。项目围绕肥胖风险预测展开，覆盖了**数据清洗、探索性分析、`sklearn` 建模、手搓模型实现、训练结果可视化、日志管理、桌面 GUI 演示与命令行推理**等完整流程。
 
 > [!IMPORTANT]
 > 本仓库中的命令都以**仓库根目录**为执行基准。
@@ -17,7 +17,7 @@
 ## 项目特性
 
 - **双训练路线**：同时支持 `sklearn` 模型族与手搓多分类模型族。
-- **双界面模式**：支持本地桌面界面和本地 HTTP Web 界面，两条界面链路分别位于 `src/interfaces/desktop/` 与 `src/interfaces/web/`。
+- **双入口模式**：本地桌面管理台与命令行推理并行保留，桌面端入口位于 `src/ui/desktop.py`。
 - **统一训练进度**：训练阶段重点展示“全流程百分比进度”，减少终端噪音。
 - **参数摘要输出**：训练完成后统一输出各模型优化后的关键参数。
 - **项目级日志体系**：位于 `src/log/` 的统一日志模块，基于标准库 `logging` 封装终端和文件双输出、`DEBUG/INFO/NOTICE/WARNING/ERROR/CRITICAL` 分级、日志轮转与保留策略。
@@ -27,19 +27,17 @@
 
 ```text
 src/
-├── analysis/                 # EDA 与分析摘要
+├── core/                   # 配置与共享契约
 ├── data_processing/          # 数据读取、清洗、切分
-├── evaluation/               # 指标计算、报告生成
 ├── features/                 # 特征工程与预处理
-├── interfaces/
-│   ├── desktop/              # 本地桌面 GUI
-│   └── web/                  # Web 页面与 HTTP 服务
 ├── models/                   # sklearn 模型、手搓模型、训练器
 ├── serving/                  # 共享推理与模型加载逻辑
 ├── log/                      # 项目级日志模块
 ├── utils/                    # 文件、进度等基础工具
-├── visualization/            # 图表绘制
-└── config.py                 # 项目配置读取
+├── reporting.py              # EDA 摘要与模型报告
+├── visualization.py          # 图表绘制
+└── ui/
+    └── desktop.py            # Fluent 桌面管理台
 ```
 
 ### 目录划分背后的思路
@@ -47,7 +45,7 @@ src/
 - `data_processing/` 只负责“把数据变干净、可切分”。
 - `features/` 只负责“把数据变成模型能吃的特征”。
 - `models/` 只负责“训练、保存、加载模型”。
-- `interfaces/desktop` 和 `interfaces/web` 明确分开，避免 GUI 逻辑与 HTTP 服务逻辑混在一起。
+- 核心契约层与桌面界面分开，避免界面逻辑和字段定义散在多个目录。
 - `serving/` 抽出两种界面都需要的推理共享逻辑，避免重复实现。
 
 ## 整体运行关系
@@ -55,14 +53,14 @@ src/
 ```mermaid
 flowchart LR
     A[原始数据 data/obesity_level.csv] --> B[data_processing]
-    B --> C[analysis / EDA]
+    B --> C[reporting / EDA]
     B --> D[features / preprocessor]
     D --> E1[models / sklearn]
     D --> E2[models / manual]
     E1 --> F[output/ 模型、图表、报告、日志]
     E2 --> F
-    F --> G1[interfaces/desktop 本地桌面 GUI]
-    F --> G2[interfaces/web 本地 HTTP Web GUI]
+    F --> G1[ui/desktop.py 本地桌面 GUI]
+    F --> G2[CLI 单样本预测]
 ```
 
 ## 快速开始
@@ -111,61 +109,17 @@ python main.py train-manual
 python main.py --help
 ```
 
-## 两种 GUI 使用方式
+## 桌面界面
 
-### 方式一：本地桌面界面
-
-这个模式**不依赖 HTTP 服务**，适合在本机直接演示。现在桌面端已经重构成多标签训练管理器，包含：
-
-- 训练路线选择
-- 项目总览与训练状态
-- 模型对比与参数摘要
-- 产物状态与图表预览
-- 单样本预测与结果导出
+### 桌面主界面
 
 ```bash
 python main.py gui-local
 ```
 
-适用场景：
+这是当前主线入口，采用 PySide6 + qfluentwidgets 的 Fluent 风格桌面管理台。
 
-- 课堂答辩时希望直接弹出本地窗口
-- 不想额外打开浏览器或启动本地 Web 服务
-- 需要更明确地区分“桌面模式”和“网页模式”
-
-### 方式二：本地 Web 界面（HTTP）
-
-这个模式会启动本地 HTTP 服务，然后在浏览器中查看页面。Web 端现在是结构化控制台，和桌面端共用同一份 `training_dashboard.json` 摘要与字段契约。
-
-```bash
-python main.py serve-web --host 127.0.0.1 --port 8000
-```
-
-兼容别名：
-
-```bash
-python main.py serve --host 127.0.0.1 --port 8000
-```
-
-启动后访问：
-
-```text
-http://127.0.0.1:8000
-```
-
-页面中会看到：
-
-- 显式训练路线选择
-- 项目总览、模型对比和参数配置
-- 训练产物状态与图表卡片
-- 单样本预测结果与概率分布
-
-> [!NOTE]
-> 这里默认提供的是**本地 HTTP 演示服务**，不是 HTTPS 部署。对于课程设计、本地展示和实验复现，这种方式已经足够直观，也更轻量。
-
-## 单条样本预测
-
-可以直接通过命令行输入一条 JSON 样本：
+命令行单样本预测：
 
 ```bash
 python main.py predict --json '{"gender":"Male","age":24,"height_m":1.75,"weight_kg":85,"family_history_with_overweight":1,"high_calorie_food_frequency":1,"vegetable_intake_score":2.0,"main_meals_per_day":3.0,"snacking_frequency":"Sometimes","smokes":0,"water_intake_liters":2.0,"calorie_monitoring":0,"physical_activity_score":1.0,"technology_use_hours":1.0,"alcohol_consumption":"Sometimes","transportation_mode":"Automobile"}'
@@ -226,14 +180,13 @@ python -m unittest tests/test_project_pipeline.py tests/test_sklearn_pipeline.py
 ## 文档索引
 
 - 方案设计：`docs/方案设计.md`
-- API 接口文档：`docs/API接口文档.md`
 - 数据说明：`docs/数据说明.md`
 - 测试说明：`docs/测试说明.md`
 - 部署说明：`docs/部署说明.md`
 
 ## 当前已知边界
 
-- Web 服务默认是本地 HTTP 演示模式，不包含生产级 HTTPS 部署配置。
+- 桌面界面与命令行推理都是本地演示模式，不包含生产级部署配置。
 - README 提供的是通用根目录命令，具体 Python 环境由使用者自行选择。
 - 单样本预测会同时尝试加载 `sklearn` 与手搓模型；如果训练只生成了其中一条链路，返回结果也会相应减少。
 
