@@ -6,24 +6,22 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-from src.analysis.analyzer import build_analysis_summary, render_analysis_markdown
-from src.config import load_project_config
+from src.reporting import build_analysis_summary, render_analysis_markdown
+from src.core.config import load_project_config
 from src.data_processing.cleaner import clean_dataset
 from src.data_processing.loader import load_dataset
 from src.data_processing.splitter import stratified_split_dataframe
-from src.evaluation.reporter import render_family_comparison_report, save_model_report
+from src.reporting import render_family_comparison_report, save_model_report
 from src.features.preprocessor import TabularPreprocessor
-from src.interfaces.shared.dashboard_schema import DEFAULT_TRAINING_MODE, normalize_dashboard_summary
-from src.interfaces.desktop.app import run_local_gui
-from src.interfaces.web.server import run_server
+from src.core.contracts import DEFAULT_TRAINING_MODE, normalize_dashboard_summary
 from src.models.manual_trainer import count_manual_training_units, train_all_models
 from src.models.sklearn_trainer import count_sklearn_training_units, train_sklearn_models
 from src.serving.inference import load_inference_bundle, predict_single
 from src.utils.file_utils import ensure_directory, write_json, write_text
-from src.log import configure_project_logging, format_kv_pairs, get_logger
+from src.log.project import configure_project_logging, format_kv_pairs, get_logger
 from src.utils.progress import WorkflowProgress
-from src.visualization.svg_plotter import save_bar_chart, save_heatmap, save_histogram
-from src.visualization.training_plots import save_named_metric_bars
+from src.ui.desktop import run_desktop_app
+from src.visualization import save_bar_chart, save_heatmap, save_histogram, save_named_metric_bars
 
 logger = get_logger('main')
 
@@ -228,14 +226,6 @@ def build_argument_parser() -> argparse.ArgumentParser:
     subparsers.add_parser('train-sklearn', help='仅执行 sklearn 版本数据处理、训练、评估与图表生成')
     subparsers.add_parser('train-manual', help='仅执行手搓版本训练流程，作为对照实验')
 
-    serve_web_parser = subparsers.add_parser('serve-web', help='启动本地 HTTP Web 演示服务')
-    serve_web_parser.add_argument('--host', default='127.0.0.1')
-    serve_web_parser.add_argument('--port', type=int, default=8000)
-
-    serve_alias_parser = subparsers.add_parser('serve', help='serve-web 的兼容别名')
-    serve_alias_parser.add_argument('--host', default='127.0.0.1')
-    serve_alias_parser.add_argument('--port', type=int, default=8000)
-
     subparsers.add_parser('gui-local', help='启动无需 HTTP 的本地桌面界面')
 
     predict_parser = subparsers.add_parser('predict', help='执行单条样本推理')
@@ -263,10 +253,8 @@ def main() -> None:
             if arguments.command in {'train', 'train-manual'}:
                 manual_summary = run_manual_training_pipeline(config, context, progress)
             finalize_training_outputs(config, context, sklearn_summary, manual_summary, progress, arguments.command)
-    elif arguments.command in {'serve-web', 'serve'}:
-        run_server(arguments.host, arguments.port)
     elif arguments.command == 'gui-local':
-        run_local_gui()
+        run_desktop_app()
     elif arguments.command == 'predict':
         run_prediction_command(arguments.json_text, arguments.payload_file)
 

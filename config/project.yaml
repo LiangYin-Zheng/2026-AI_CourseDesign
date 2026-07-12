@@ -1,0 +1,283 @@
+project_name: 肥胖风险预测系统设计
+data_path: data/obesity_level.csv
+random_seed: 42
+test_size: 0.2
+validation_size: 0.2
+target_column: obesity_level
+raw_target_column: 0be1dad
+output_dirs:
+  analysis: output/analysis
+  evaluation: output/evaluation
+  figures: output/figures
+  models: output/models
+  predictions: output/predictions
+  reports: output/reports
+  logs: output/logs
+raw_column_mapping:
+  id: record_id
+  Gender: gender
+  Age: age
+  Height: height_m
+  Weight: weight_kg
+  family_history_with_overweight: family_history_with_overweight
+  FAVC: high_calorie_food_frequency
+  FCVC: vegetable_intake_score
+  NCP: main_meals_per_day
+  CAEC: snacking_frequency
+  SMOKE: smokes
+  CH2O: water_intake_liters
+  SCC: calorie_monitoring
+  FAF: physical_activity_score
+  TUE: technology_use_hours
+  CALC: alcohol_consumption
+  MTRANS: transportation_mode
+  0be1dad: obesity_level
+label_mapping:
+  0rmal_Weight: Normal_Weight
+categorical_normalization:
+  snacking_frequency:
+    "0": Never
+  alcohol_consumption:
+    "0": Never
+numeric_features:
+  - age
+  - height_m
+  - weight_kg
+  - high_calorie_food_frequency
+  - vegetable_intake_score
+  - main_meals_per_day
+  - smokes
+  - water_intake_liters
+  - calorie_monitoring
+  - physical_activity_score
+  - technology_use_hours
+  - bmi
+  - sedentary_transport
+  - snacking_score
+  - alcohol_score
+  - behavior_risk_score
+categorical_features:
+  - gender
+  - family_history_text
+  - snacking_frequency
+  - alcohol_consumption
+  - transportation_mode
+analysis_numeric_features:
+  - age
+  - height_m
+  - weight_kg
+  - bmi
+  - water_intake_liters
+  - physical_activity_score
+  - technology_use_hours
+baseline_models:
+  logistic_regression:
+    learning_rate: 0.08
+    epochs: 350
+    reg_strength: 0.0008
+  neural_network:
+    hidden_units: 24
+    learning_rate: 0.03
+    epochs: 280
+    l2_strength: 0.0005
+optimization_grids:
+  logistic_regression:
+    learning_rate: [0.05, 0.08, 0.12]
+    epochs: [300, 450]
+    reg_strength: [0.0001, 0.0008, 0.0015]
+  neural_network:
+    hidden_units: [20, 32, 48]
+    learning_rate: [0.02, 0.03, 0.05]
+    epochs: [220, 320]
+    l2_strength: [0.0001, 0.0005]
+sklearn_models:
+  baseline:
+    logistic_regression:
+      C: 1.0
+      max_iter: 300
+      class_weight: null
+    mlp_classifier:
+      hidden_units: 32
+      learning_rate_init: 0.001
+      alpha: 0.0005
+      epochs: 60
+  optimization_grids:
+    logistic_regression:
+      C: [0.6, 1.0, 1.8]
+      max_iter: [300, 500]
+      class_weight: [null]
+    mlp_classifier:
+      hidden_units: [24, 32]
+      learning_rate_init: [0.0008, 0.0015]
+      alpha: [0.0001, 0.0005]
+      epochs: [50, 80]
+visualization:
+  histogram_bins: 12
+ui:
+  app:
+    title: 肥胖风险预测系统 · 本地智能管理台
+    subtitle: 训练、对比、预测和产物浏览的一体化桌面端。
+    theme: dark
+    default_training_mode: train
+    window:
+      width: 1600
+      height: 980
+      minimum_width: 1360
+      minimum_height: 860
+  navigation:
+    - key: overview
+      label: 总览
+      description: 项目状态和关键指标总览
+      icon: home
+    - key: training
+      label: 训练
+      description: 训练路线、进度和摘要
+      icon: run
+    - key: comparison
+      label: 对比
+      description: 模型指标与参数对比
+      icon: chart
+    - key: prediction
+      label: 预测
+      description: 单样本输入与推理结果
+      icon: search
+    - key: artifacts
+      label: 产物
+      description: 训练产物、图表和报告
+      icon: folder
+  buttons:
+    reload: 刷新摘要
+    train: 启动训练
+    predict: 执行预测
+    export: 导出快照
+    refresh_chart: 刷新图表
+  status_messages:
+    ready: 训练摘要已加载。
+    loading: 正在读取训练摘要...
+    no_dashboard: 尚未检测到训练摘要，请先执行训练。
+    training: 正在启动训练任务...
+    prediction_ready: 等待执行预测。
+  page_copy:
+    overview:
+      title: 项目总览
+      description: 查看项目规模、训练结果、推荐模型和产物健康状态。
+    training:
+      title: 训练控制
+      description: 选择训练路线并触发后台训练进程。
+    comparison:
+      title: 模型对比
+      description: 检查各模型族的测试指标与参数摘要。
+    prediction:
+      title: 单样本预测
+      description: 根据表单输入触发推理并展示结果。
+    artifacts:
+      title: 训练产物
+      description: 浏览输出目录、图表和报告文件。
+  training_modes:
+    - value: train
+      label: 全量训练
+      description: 同时运行 sklearn 与手搓训练链路。
+    - value: train-sklearn
+      label: sklearn 训练
+      description: 只运行 sklearn 训练链路。
+    - value: train-manual
+      label: 手搓模型训练
+      description: 只运行手搓模型训练链路。
+    - value: artifacts-only
+      label: 仅展示已有产物
+      description: 只加载已生成的摘要与产物。
+  form_fields:
+    - name: gender
+      label: 性别
+      default: Female
+      value_type: text
+      options: [Female, Male]
+    - name: age
+      label: 年龄
+      default: 24.0
+      value_type: float
+    - name: height_m
+      label: 身高（米）
+      default: 1.70
+      value_type: float
+    - name: weight_kg
+      label: 体重（千克）
+      default: 72.0
+      value_type: float
+    - name: family_history_with_overweight
+      label: 家族肥胖史
+      default: 1
+      value_type: int
+      options: [1, 0]
+    - name: high_calorie_food_frequency
+      label: 高热量饮食偏好
+      default: 1
+      value_type: int
+      options: [1, 0]
+    - name: vegetable_intake_score
+      label: 蔬菜摄入评分
+      default: 2.5
+      value_type: float
+    - name: main_meals_per_day
+      label: 每日正餐次数
+      default: 3.0
+      value_type: float
+    - name: snacking_frequency
+      label: 加餐频率
+      default: Sometimes
+      value_type: text
+      options: [Never, Sometimes, Frequently, Always]
+    - name: smokes
+      label: 是否吸烟
+      default: 0
+      value_type: int
+      options: [0, 1]
+    - name: water_intake_liters
+      label: 饮水量（升）
+      default: 2.0
+      value_type: float
+    - name: calorie_monitoring
+      label: 是否热量监测
+      default: 0
+      value_type: int
+      options: [0, 1]
+    - name: physical_activity_score
+      label: 运动评分
+      default: 1.5
+      value_type: float
+    - name: technology_use_hours
+      label: 电子设备使用时长评分
+      default: 1.0
+      value_type: float
+    - name: alcohol_consumption
+      label: 饮酒频率
+      default: Sometimes
+      value_type: text
+      options: [Never, Sometimes, Frequently, Always]
+    - name: transportation_mode
+      label: 出行方式
+      default: Automobile
+      value_type: text
+      options: [Public_Transportation, Automobile, Walking, Motorbike, Bike]
+  artifact_groups:
+    - key: analysis
+      label: 分析产物
+      description: 清洗后的数据、EDA 摘要与分析报告
+    - key: evaluation
+      label: 评估产物
+      description: 训练仪表盘和评估结果 JSON
+    - key: figures
+      label: 图表产物
+      description: EDA 图、训练曲线和对比图
+    - key: logs
+      label: 日志产物
+      description: 项目运行日志与轮转文件
+    - key: models
+      label: 模型产物
+      description: 训练后的模型文件和预处理器
+    - key: predictions
+      label: 预测产物
+      description: 测试集预测结果和输出记录
+    - key: reports
+      label: 报告产物
+      description: Markdown 报告与交付摘要

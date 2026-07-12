@@ -8,15 +8,12 @@ import pandas as pd
 
 from src.data_processing.cleaner import clean_dataset
 from src.features.preprocessor import TabularPreprocessor
-from src.interfaces.shared.dashboard_schema import normalize_dashboard_summary
-from src.interfaces.shared.formatters import normalize_prediction_result
-from src.interfaces.shared.sample_schema import coerce_prediction_payload
-from src.models.logistic_regression import SoftmaxLogisticRegression
+from src.core.contracts import coerce_prediction_payload, normalize_dashboard_summary, normalize_prediction_result
 from src.models.manual_trainer import load_model_state
-from src.models.neural_network import SimpleNeuralNetwork
 from src.models.sklearn_trainer import load_pickle
 from src.utils.file_utils import read_json
-from src.log import get_logger
+from src.log.project import get_logger
+from src.models.manual_models import SimpleNeuralNetwork, SoftmaxLogisticRegression
 
 logger = get_logger('serving-inference')
 

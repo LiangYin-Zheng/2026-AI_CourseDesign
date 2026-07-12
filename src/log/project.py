@@ -12,7 +12,7 @@ _NAMESPACE = 'obesity-risk-system'
 _NOTICE_LEVEL = 25
 _CONSOLE_FORMAT = '%(asctime)s | %(component)s | %(message)s'
 _FILE_FORMAT = '%(asctime)s.%(msecs)03d | %(levelname)-8s | %(component)s | %(pathname)s:%(funcName)s:%(lineno)d | %(message)s'
-_VISIBLE_CONSOLE_COMPONENTS = {'main', 'web-server', 'desktop-gui', 'serving-inference'}
+_VISIBLE_CONSOLE_COMPONENTS = {'main', 'desktop-gui', 'serving-inference'}
 
 
 def _install_notice_level() -> None:

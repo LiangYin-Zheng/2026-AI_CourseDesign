@@ -21,8 +21,8 @@ np.seterr(over='ignore', divide='ignore', invalid='ignore')
 from src.evaluation.metrics import evaluate_predictions
 from src.features.sklearn_pipeline import build_sklearn_preprocessor, select_feature_frame
 from src.utils.file_utils import ensure_directory, write_json, write_text
-from src.log import get_logger
-from src.visualization.training_plots import (
+from src.log.project import get_logger
+from src.visualization import (
     save_confusion_matrix,
     save_metric_comparison,
     save_multiclass_roc_curve,

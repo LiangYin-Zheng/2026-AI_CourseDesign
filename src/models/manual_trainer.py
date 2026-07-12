@@ -9,11 +9,10 @@ import pandas as pd
 
 from src.evaluation.metrics import evaluate_predictions
 from src.features.preprocessor import TabularPreprocessor
-from src.models.logistic_regression import SoftmaxLogisticRegression
-from src.models.neural_network import SimpleNeuralNetwork
+from src.models.manual_models import SimpleNeuralNetwork, SoftmaxLogisticRegression
 from src.utils.file_utils import write_json, write_text
-from src.log import get_logger
-from src.visualization.training_plots import save_metric_comparison, save_named_metric_bars, save_training_curve
+from src.log.project import get_logger
+from src.visualization import save_metric_comparison, save_named_metric_bars, save_training_curve
 
 logger = get_logger('manual-trainer')
 ProgressAdvanceCallback = Callable[[str, str], None]
