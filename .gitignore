@@ -10,6 +10,15 @@ AGENTS.md
 # Ignore Visual Studio Code settings
 .vscode/
 
-# Ignore Python cache files
+# Ignore Python cache and test artifacts
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.tmp
+
+# Ignore reproducible processed data and model binaries
+data/processed/
+outputs/models/*.joblib
+outputs/models/*.npz

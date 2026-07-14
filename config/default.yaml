@@ -3,6 +3,46 @@ data:
   target: 0be1dad
   exclude_columns:
     - id
+  required_columns:
+    - id
+    - Gender
+    - Age
+    - Height
+    - Weight
+    - family_history_with_overweight
+    - FAVC
+    - FCVC
+    - NCP
+    - CAEC
+    - SMOKE
+    - CH2O
+    - SCC
+    - FAF
+    - TUE
+    - CALC
+    - MTRANS
+    - 0be1dad
+  numeric_columns:
+    - Age
+    - Height
+    - Weight
+    - FCVC
+    - NCP
+    - CH2O
+    - FAF
+    - TUE
+  categorical_columns:
+    - Gender
+    - family_history_with_overweight
+    - FAVC
+    - CAEC
+    - SMOKE
+    - SCC
+    - CALC
+    - MTRANS
+  allow_extra_columns: false
+  allow_missing_columns: false
+  allow_all_null_columns: false
 
 split:
   train: 0.70
@@ -10,6 +50,65 @@ split:
   test: 0.15
   random_seed: 42
 
+preprocessing:
+  numeric_imputation: median
+  categorical_imputation: most_frequent
+  scale_numeric: true
+  unknown_category_policy: ignore
+
+training:
+  sklearn_logistic:
+    max_iter: 500
+    candidates:
+      - {C: 0.5, class_weight: null, solver: lbfgs}
+      - {C: 1.0, class_weight: null, solver: lbfgs}
+      - {C: 1.0, class_weight: balanced, solver: lbfgs}
+  sklearn_mlp:
+    max_iter: 180
+    early_stopping: true
+    validation_fraction: 0.12
+    candidates:
+      - {hidden_layer_sizes: [48], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [64, 32], activation: relu, alpha: 0.001, learning_rate_init: 0.001}
+  manual_logistic:
+    learning_rate: 0.08
+    l2: 0.0005
+    max_epochs: 300
+    patience: 25
+    tolerance: 0.00001
+  manual_mlp:
+    hidden_size: 48
+    learning_rate: 0.01
+    l2: 0.0005
+    max_epochs: 220
+    batch_size: 256
+    patience: 25
+    tolerance: 0.00001
+
+optimization:
+  enabled: true
+  scoring: f1_macro
+
+eda:
+  dpi: 180
+  scatter_sample_size: 2500
+
 paths:
   processed_dir: data/processed
   output_dir: outputs
+
+outputs:
+  figures_dir: outputs/eda/figures
+  metrics_dir: outputs/metrics
+  models_dir: outputs/models
+  reports_dir: outputs/reports
+
+audit:
+  report_dir: outputs/data_audit
+  imbalance_ratio_warning: 1.5
+  iqr_exempt_columns:
+    - NCP
+  suspicious_ranges:
+    Age: [0, 120]
+    Height: [0.5, 2.5]
+    Weight: [2, 500]
