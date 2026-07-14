@@ -37,7 +37,7 @@ class PreparedData:
 def build_input_metadata(
     train_features: pd.DataFrame, schema: DatasetSchema
 ) -> dict:
-    """生成模型训练和预测共用的输入元数据。"""
+    # 生成模型训练和预测共用的输入元数据。
     input_columns = train_features.columns.tolist()
     numeric_ranges = {}
     for column in schema.numeric_columns:
@@ -72,7 +72,7 @@ def build_input_metadata(
 
 # 在副本上执行可解释的最小清洗，不裁剪合法极端值
 def clean_dataframe(frame: pd.DataFrame, schema: DatasetSchema) -> tuple[pd.DataFrame, dict]:
-    """清洗字段格式、无穷值和重复行，并返回清洗摘要。"""
+    # 清洗字段格式、无穷值和重复行，并返回清洗摘要。
     cleaned = frame.copy(deep=True)
     cleaned.columns = [str(name).strip() for name in cleaned.columns]
     schema_summary = validate_schema(cleaned, schema)
@@ -109,7 +109,7 @@ def clean_dataframe(frame: pd.DataFrame, schema: DatasetSchema) -> tuple[pd.Data
 def stratified_split_indices(
     labels: pd.Series, split_config: dict
 ) -> dict[str, list[int]]:
-    """使用固定随机种子返回互斥的三份分层行索引。"""
+    # 使用固定随机种子返回互斥的三份分层行索引。
     all_indices = labels.index.to_numpy()
     train_indices, remainder_indices = train_test_split(
         all_indices,
@@ -135,7 +135,7 @@ def stratified_split_indices(
 
 # 创建只在训练数据上拟合的列预处理器
 def build_preprocessor(schema: DatasetSchema, preprocessing_config: dict) -> ColumnTransformer:
-    """创建数值填补/缩放和类别填补/独热编码预处理器。"""
+    # 创建数值填补/缩放和类别填补/独热编码预处理器。
     numeric_steps: list[tuple[str, object]] = [
         ("imputer", SimpleImputer(strategy=preprocessing_config["numeric_imputation"]))
     ]
@@ -169,7 +169,7 @@ def build_preprocessor(schema: DatasetSchema, preprocessing_config: dict) -> Col
 def prepare_dataframe(
     frame: pd.DataFrame, schema: DatasetSchema, config: dict
 ) -> PreparedData:
-    """生成四模型共享的无泄漏训练、验证和测试数据。"""
+    # 生成四模型共享的无泄漏训练、验证和测试数据。
     cleaned, clean_summary = clean_dataframe(frame, schema)
     split_indices = stratified_split_indices(cleaned[schema.target_column], config["split"])
     feature_columns = [
@@ -213,7 +213,7 @@ def prepare_dataframe(
 
 # 保存固定划分、特征和预处理器，供四模型复用
 def save_prepared_artifacts(prepared: PreparedData, processed_dir: Path) -> dict[str, Path]:
-    """保存划分摘要、索引、特征元数据和训练集预处理器。"""
+    # 保存划分摘要、索引、特征元数据和训练集预处理器。
     processed_dir.mkdir(parents=True, exist_ok=True)
     labels = prepared.label_encoder.classes_.tolist()
     split_summary = {"cleaning": prepared.clean_summary, "classes": labels, "splits": {}}
