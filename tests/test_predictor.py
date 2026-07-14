@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from sklearn.preprocessing import LabelEncoder
 
-from obesity_risk.predictor import Predictor, load_predictor
+from model.predictor import Predictor, load_predictor
 
 
 class ProbabilityModel:

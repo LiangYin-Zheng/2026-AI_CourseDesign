@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from model.predictor import load_predictor
+from model.training import train_sklearn_models
 from obesity_risk.config import load_config
 from obesity_risk.preparation import prepare_dataframe
-from obesity_risk.predictor import load_predictor
 from obesity_risk.schema import DatasetSchema
-from obesity_risk.training import train_sklearn_models
 
 
 # 验证两个 sklearn Pipeline 均可在小数据上训练、评估和保存

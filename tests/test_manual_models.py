@@ -3,11 +3,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from obesity_risk.manual_models import (
-    ManualLogisticRegression,
-    ManualMLPClassifier,
-    stable_softmax,
-)
+from model.manual_logistic import ManualLogisticRegression
+from model.manual_mlp import ManualMLPClassifier
+from model.numerics import stable_softmax
 
 
 # 创建容易分离的三类二维训练数据
@@ -116,8 +114,13 @@ def test_manual_mlp_gradients_match_finite_difference() -> None:
         hidden = np.maximum(features @ input_weights, 0.0)
         probabilities = stable_softmax(hidden @ output_weights)
         likelihood = -np.mean(np.log(probabilities[np.arange(len(labels)), labels]))
-        penalty = 0.5 * 0.01 * (
-            np.sum(input_weights * input_weights) + np.sum(output_weights * output_weights)
+        penalty = (
+            0.5
+            * 0.01
+            * (
+                np.sum(input_weights * input_weights)
+                + np.sum(output_weights * output_weights)
+            )
         )
         return float(likelihood + penalty)
 
@@ -139,7 +142,9 @@ def test_manual_mlp_gradients_match_finite_difference() -> None:
     numerical_output = (
         loss(initial_input, positive_output) - loss(initial_input, negative_output)
     ) / (2 * epsilon)
-    inferred_output = (initial_output[0, 0] - model.output_weights[0, 0]) / learning_rate
+    inferred_output = (
+        initial_output[0, 0] - model.output_weights[0, 0]
+    ) / learning_rate
     assert abs(numerical_output - inferred_output) < 1e-5
 
 
