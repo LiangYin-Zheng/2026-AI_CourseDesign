@@ -14,12 +14,12 @@ from model import (
     build_sklearn_classifier,
     normalize_candidate,
 )
-from obesity_risk.evaluation import (
+from evaluation.metrics import (
     evaluate_predictions,
     save_evaluation_artifacts,
     save_loss_curve,
 )
-from obesity_risk.preparation import PreparedData
+from data.preparation import PreparedData
 
 MODEL_DISPLAY_NAMES = {
     "sklearn_logistic": "sklearn 逻辑回归",
