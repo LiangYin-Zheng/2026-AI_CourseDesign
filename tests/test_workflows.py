@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-import pandas as pd
-
 from obesity_risk.workflows import MODEL_NAMES, build_model_comparison
 
 
