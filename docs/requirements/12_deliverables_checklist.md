@@ -1,6 +1,6 @@
 # 最终交付物清单
 
-复选框仅在存在可验证产物后勾选。当前只勾选阶段一已实际生成的项目文档，不把计划标为完成。
+复选框仅在存在可验证产物后勾选。阶段一文档和阶段二最小工程已按实际结果标记，不把后续计划写成完成。
 
 ## 阶段一：需求与规划
 
@@ -24,15 +24,14 @@
 
 ## 阶段二：工程基础
 
-- [ ] `config/default.yaml` 及配置说明
-- [ ] 可安装/可导入的源代码包
-- [ ] 配置读取与校验模块
-- [ ] 路径管理及原始数据保护
-- [ ] logging 配置
-- [ ] pytest 基础目录与测试
-- [ ] 最小 CLI 命令入口
-- [ ] Python 3.10/M5 兼容依赖文件
-- [ ] README 环境、测试和运行说明
+- [x] `config/default.yaml`
+- [x] `src/obesity_risk/__init__.py` 与 `src/obesity_risk/__main__.py`
+- [x] `src/obesity_risk/config.py` 配置读取与基础校验
+- [x] `src/obesity_risk/paths.py` 路径管理及原始数据保护
+- [x] `tests/test_config.py`
+- [x] `tests/test_paths.py`
+- [x] `pyproject.toml` Python 3.10 依赖与 pytest 配置
+- [x] README 环境要求、运行、测试和数据保护说明
 
 ## 阶段三：sklearn 完整版本
 
@@ -97,11 +96,10 @@
 ## 最终复现与版本控制
 
 - [ ] 原始 CSV 最终哈希与基线一致
-- [ ] 全套 pytest 在指定 Conda 环境通过
+- [ ] 全套 pytest 在项目 Python 3.10 环境通过
 - [ ] 从干净输出目录按 README 完成复现
 - [ ] 依赖版本与运行环境记录
 - [ ] 所有阶段验收证据归档
 - [ ] Git 提交细粒度、中文 Conventional Commits、双 `-m`
 - [ ] 无账号、密码、Token、私钥、Cookie 或个人隐私
 - [ ] 未自动 push；远程操作仅在用户明确授权后执行
-
