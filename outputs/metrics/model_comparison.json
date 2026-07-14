@@ -1,0 +1,74 @@
+{
+  "deployment_selection_metric": "validation_macro_f1",
+  "deployment_tie_breakers": [
+    "validation_accuracy",
+    "training_time_seconds",
+    "fixed_model_order"
+  ],
+  "selected_model": "sklearn_mlp",
+  "selected_validation_macro_f1": 0.8745302543004357,
+  "selection_reason": "按验证集 macro F1 选择；测试集仅用于最终评估展示",
+  "test_ranking_metric": "test_macro_f1",
+  "test_ranking": [
+    {
+      "rank": 1,
+      "model_name": "sklearn_mlp",
+      "display_name": "sklearn 神经网络",
+      "validation_accuracy": 0.886640976236352,
+      "validation_macro_f1": 0.8745302543004357,
+      "accuracy": 0.8689788053949904,
+      "macro_precision": 0.8547916307756687,
+      "macro_recall": 0.8542723664423714,
+      "macro_f1": 0.8542908289437365,
+      "weighted_f1": 0.8682379555920604,
+      "training_time_seconds": 0.4261124590411782,
+      "inference_time_seconds": 0.00773945904802531,
+      "selected_for_deployment": true
+    },
+    {
+      "rank": 2,
+      "model_name": "manual_mlp",
+      "display_name": "NumPy 手写神经网络",
+      "validation_accuracy": 0.8702633269107257,
+      "validation_macro_f1": 0.8565895427045227,
+      "accuracy": 0.863519588953115,
+      "macro_precision": 0.8475376103289075,
+      "macro_recall": 0.8489531624024929,
+      "macro_f1": 0.8478774135226189,
+      "weighted_f1": 0.8622847124814174,
+      "training_time_seconds": 2.052625000011176,
+      "inference_time_seconds": 0.00044050009455531836,
+      "selected_for_deployment": false
+    },
+    {
+      "rank": 3,
+      "model_name": "sklearn_logistic",
+      "display_name": "sklearn 逻辑回归",
+      "validation_accuracy": 0.8702633269107257,
+      "validation_macro_f1": 0.8566191873467722,
+      "accuracy": 0.8580603725112396,
+      "macro_precision": 0.841735062013197,
+      "macro_recall": 0.8431737543917267,
+      "macro_f1": 0.8418699851990995,
+      "weighted_f1": 0.8566633752075579,
+      "training_time_seconds": 0.23766550002619624,
+      "inference_time_seconds": 0.00598754093516618,
+      "selected_for_deployment": false
+    },
+    {
+      "rank": 4,
+      "model_name": "manual_logistic",
+      "display_name": "NumPy 手写逻辑回归",
+      "validation_accuracy": 0.6714836223506744,
+      "validation_macro_f1": 0.6283939082988373,
+      "accuracy": 0.6888246628131022,
+      "macro_precision": 0.6524553530345517,
+      "macro_recall": 0.6549324629576917,
+      "macro_f1": 0.644649898097116,
+      "weighted_f1": 0.6727177169231696,
+      "training_time_seconds": 0.41487691598013043,
+      "inference_time_seconds": 0.0002297920873388648,
+      "selected_for_deployment": false
+    }
+  ]
+}

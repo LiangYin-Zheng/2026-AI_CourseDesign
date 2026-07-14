@@ -1,0 +1,318 @@
+{
+  "model_name": "sklearn_mlp",
+  "display_name": "sklearn 神经网络",
+  "parameters": {
+    "hidden_layer_sizes": [
+      64,
+      32
+    ],
+    "activation": "relu",
+    "alpha": 0.001,
+    "learning_rate_init": 0.001
+  },
+  "parameters_json": "{\n  \"hidden_layer_sizes\": [\n    64,\n    32\n  ],\n  \"activation\": \"relu\",\n  \"alpha\": 0.001,\n  \"learning_rate_init\": 0.001\n}",
+  "selection_metric": "validation_macro_f1",
+  "selection_reason": "验证集 macro F1 最高；测试集未参与候选选择",
+  "candidate_results": [
+    {
+      "parameters": {
+        "hidden_layer_sizes": [
+          48
+        ],
+        "activation": "relu",
+        "alpha": 0.0001,
+        "learning_rate_init": 0.001
+      },
+      "validation_macro_f1": 0.8715276424851858,
+      "validation_accuracy": 0.8840719332048812,
+      "training_time_seconds": 0.4345694170333445
+    },
+    {
+      "parameters": {
+        "hidden_layer_sizes": [
+          64,
+          32
+        ],
+        "activation": "relu",
+        "alpha": 0.001,
+        "learning_rate_init": 0.001
+      },
+      "validation_macro_f1": 0.8745302543004357,
+      "validation_accuracy": 0.886640976236352,
+      "training_time_seconds": 0.4261124590411782
+    }
+  ],
+  "validation_metrics": {
+    "accuracy": 0.886640976236352,
+    "macro_precision": 0.8758171437255455,
+    "macro_recall": 0.8742408967080586,
+    "macro_f1": 0.8745302543004357,
+    "weighted_precision": 0.8867865475039032,
+    "weighted_recall": 0.886640976236352,
+    "weighted_f1": 0.8862982067617121,
+    "confusion_matrix": [
+      [
+        403,
+        24,
+        1,
+        0,
+        0,
+        26,
+        9
+      ],
+      [
+        28,
+        349,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        375,
+        21,
+        4,
+        10,
+        25
+      ],
+      [
+        0,
+        0,
+        21,
+        464,
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        607,
+        0,
+        0
+      ],
+      [
+        31,
+        1,
+        7,
+        0,
+        0,
+        257,
+        68
+      ],
+      [
+        3,
+        0,
+        32,
+        4,
+        0,
+        33,
+        306
+      ]
+    ],
+    "classification_report": {
+      "0rmal_Weight": {
+        "precision": 0.8648068669527897,
+        "recall": 0.8704103671706264,
+        "f1-score": 0.8675995694294941,
+        "support": 463.0
+      },
+      "Insufficient_Weight": {
+        "precision": 0.9331550802139037,
+        "recall": 0.920844327176781,
+        "f1-score": 0.9269588313413014,
+        "support": 379.0
+      },
+      "Obesity_Type_I": {
+        "precision": 0.8600917431192661,
+        "recall": 0.8600917431192661,
+        "f1-score": 0.8600917431192661,
+        "support": 436.0
+      },
+      "Obesity_Type_II": {
+        "precision": 0.9469387755102041,
+        "recall": 0.9527720739219713,
+        "f1-score": 0.9498464687819856,
+        "support": 487.0
+      },
+      "Obesity_Type_III": {
+        "precision": 0.9934533551554828,
+        "recall": 1.0,
+        "f1-score": 0.9967159277504105,
+        "support": 607.0
+      },
+      "Overweight_Level_I": {
+        "precision": 0.7859327217125383,
+        "recall": 0.7060439560439561,
+        "f1-score": 0.743849493487699,
+        "support": 364.0
+      },
+      "Overweight_Level_II": {
+        "precision": 0.7463414634146341,
+        "recall": 0.8095238095238095,
+        "f1-score": 0.7766497461928934,
+        "support": 378.0
+      },
+      "accuracy": 0.886640976236352,
+      "macro avg": {
+        "precision": 0.8758171437255455,
+        "recall": 0.8742408967080586,
+        "f1-score": 0.8745302543004357,
+        "support": 3114.0
+      },
+      "weighted avg": {
+        "precision": 0.8867865475039032,
+        "recall": 0.886640976236352,
+        "f1-score": 0.8862982067617121,
+        "support": 3114.0
+      }
+    }
+  },
+  "test_metrics": {
+    "accuracy": 0.8689788053949904,
+    "macro_precision": 0.8547916307756687,
+    "macro_recall": 0.8542723664423714,
+    "macro_f1": 0.8542908289437365,
+    "weighted_precision": 0.8679136073383473,
+    "weighted_recall": 0.8689788053949904,
+    "weighted_f1": 0.8682379555920604,
+    "confusion_matrix": [
+      [
+        389,
+        32,
+        0,
+        0,
+        0,
+        35,
+        6
+      ],
+      [
+        34,
+        343,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        0,
+        373,
+        20,
+        3,
+        7,
+        33
+      ],
+      [
+        0,
+        0,
+        12,
+        473,
+        0,
+        0,
+        2
+      ],
+      [
+        1,
+        0,
+        0,
+        1,
+        603,
+        1,
+        1
+      ],
+      [
+        33,
+        3,
+        12,
+        0,
+        0,
+        249,
+        67
+      ],
+      [
+        4,
+        0,
+        51,
+        7,
+        0,
+        41,
+        276
+      ]
+    ],
+    "classification_report": {
+      "0rmal_Weight": {
+        "precision": 0.841991341991342,
+        "recall": 0.841991341991342,
+        "f1-score": 0.841991341991342,
+        "support": 462.0
+      },
+      "Insufficient_Weight": {
+        "precision": 0.9074074074074074,
+        "recall": 0.9074074074074074,
+        "f1-score": 0.9074074074074074,
+        "support": 378.0
+      },
+      "Obesity_Type_I": {
+        "precision": 0.8325892857142857,
+        "recall": 0.8535469107551488,
+        "f1-score": 0.8429378531073446,
+        "support": 437.0
+      },
+      "Obesity_Type_II": {
+        "precision": 0.9441117764471058,
+        "recall": 0.971252566735113,
+        "f1-score": 0.9574898785425101,
+        "support": 487.0
+      },
+      "Obesity_Type_III": {
+        "precision": 0.995049504950495,
+        "recall": 0.9934102141680395,
+        "f1-score": 0.9942291838417148,
+        "support": 607.0
+      },
+      "Overweight_Level_I": {
+        "precision": 0.7455089820359282,
+        "recall": 0.6840659340659341,
+        "f1-score": 0.7134670487106017,
+        "support": 364.0
+      },
+      "Overweight_Level_II": {
+        "precision": 0.7168831168831169,
+        "recall": 0.7282321899736148,
+        "f1-score": 0.7225130890052356,
+        "support": 379.0
+      },
+      "accuracy": 0.8689788053949904,
+      "macro avg": {
+        "precision": 0.8547916307756687,
+        "recall": 0.8542723664423714,
+        "f1-score": 0.8542908289437365,
+        "support": 3114.0
+      },
+      "weighted avg": {
+        "precision": 0.8679136073383473,
+        "recall": 0.8689788053949904,
+        "f1-score": 0.8682379555920604,
+        "support": 3114.0
+      }
+    }
+  },
+  "training_time_seconds": 0.4261124590411782,
+  "inference_time_seconds": 0.00773945904802531,
+  "class_names": [
+    "0rmal_Weight",
+    "Insufficient_Weight",
+    "Obesity_Type_I",
+    "Obesity_Type_II",
+    "Obesity_Type_III",
+    "Overweight_Level_I",
+    "Overweight_Level_II"
+  ]
+}

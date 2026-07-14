@@ -1,6 +1,6 @@
 # 系统模块规划
 
-## 当前阶段二实际结构
+## 当前非 UI 核心实际结构
 
 ```text
 config/
@@ -9,18 +9,31 @@ src/
 └── obesity_risk/
     ├── __init__.py
     ├── __main__.py
+    ├── audit_report.py
     ├── config.py
-    └── paths.py
+    ├── data_audit.py
+    ├── data_loader.py
+    ├── eda.py
+    ├── evaluation.py
+    ├── io_utils.py
+    ├── manual_models.py
+    ├── paths.py
+    ├── predictor.py
+    ├── preparation.py
+    ├── training.py
+    ├── workflows.py
+    └── schema.py
 tests/
 ├── test_config.py
-└── test_paths.py
+├── test_paths.py
+└── test_*.py
 ```
 
-`data/obesity_level.csv` 是当前原始文件。阶段二不移动、不复制、不读取其内容，也不提前创建处理数据或输出目录。
+`data/obesity_level.csv` 始终只读；划分/预处理元数据位于 `data/processed/`，EDA、四模型、指标和实验总结位于 `outputs/`。真实完整流程运行前后原始文件快照一致。
 
 ## 后续阶段规划结构
 
-阶段三及以后根据实际任务逐步增加 `data/`、`analysis/`、`models/`、`evaluation/`、`artifacts/`、`app/` 和 `outputs/` 等模块。只有进入数据处理、训练和实验记录后，才按实际需要增加日志能力，不预留独立空壳模块。
+核心包保持扁平结构，避免为当前规模建立过深目录。阶段五只新增实际 UI 所需模块，并直接消费 `predictor.py` 与现有输出，不复制训练逻辑。
 
 ## 模块清单
 
@@ -28,10 +41,11 @@ tests/
 |---|---|---|---|---|
 | 配置 | 阶段二已实现 | 读取并校验当前 YAML 配置 | `config.py` | 缺项、类型、比例和关键值 |
 | 路径 | 阶段二已实现 | 固定根目录解析、路径防逃逸和原始数据保护 | `paths.py` | 越界、覆盖、目录冲突、文件缺失 |
-| 简单入口 | 阶段二已实现 | 串联配置和路径检查 | `__main__.py` | `python -m obesity_risk` 成功运行 |
-| 数据读取/质量 | 阶段三规划 | 只读加载 CSV、schema 与质量检查 | `data/` | 缺文件、格式错误、输入不变 |
-| 数据划分/预处理 | 阶段三规划 | 固定分层三分和训练集拟合预处理 | `data/` | 互斥、复现、无泄漏 |
-| EDA/模型/评估/产物 | 阶段三至四规划 | 分析、四模型训练、统一评估和产物保存 | 对应业务目录 | 指标、接口、可复现和公平比较 |
+| CLI 入口 | 阶段四已实现 | 调用七个非 UI 工作流命令 | `__main__.py` | 命令 smoke 与错误退出码 |
+| 数据读取/质量 | 阶段三第一步已实现 | 只读加载 CSV、Schema 与质量检查、结构化报告 | `data_loader.py`、`schema.py`、`data_audit.py`、`audit_report.py` | 缺文件、格式错误、输入不变、统计和序列化 |
+| 数据划分/预处理 | 阶段三已实现 | 固定分层三分和训练集拟合预处理 | `preparation.py` | 互斥、复现、无泄漏 |
+| EDA/模型/评估/产物 | 阶段三至四已实现 | 分析、四模型训练、统一评估和产物保存 | `eda.py`、`training.py`、`manual_models.py`、`evaluation.py`、`workflows.py` | 指标、接口、可复现和公平比较 |
+| 预测服务 | 阶段四已实现 | 重载最佳模型并提供单条/批量结构化预测 | `predictor.py` | schema、概率、错误提示、免责声明 |
 | 应用服务/交互页面 | 阶段五规划 | 五页面展示、训练、预测和比较 | `app/` | 输入校验、状态、结果和免责声明 |
 
 ## 调用关系
@@ -55,7 +69,7 @@ flowchart LR
 
 ## 配置规划
 
-当前 `config/default.yaml` 仅包含 `data`、`split` 和 `paths`。后续阶段只在功能实际实现时增加特征、预处理、模型、评估、图表或产物配置，不提前预留日志、模型和界面参数。
+当前 `config/default.yaml` 已包含数据、划分、预处理、训练、优化、EDA 和输出配置；尚未增加 UI 参数。
 
 固定初值候选：`random_seed: 42`、训练/验证/测试 `0.70/0.15/0.15`、目标精确值 `0be1dad`、排除列 `[id]`。数值和类别字段清单必须与数据 schema 校验，不能默默忽略拼写错误。
 

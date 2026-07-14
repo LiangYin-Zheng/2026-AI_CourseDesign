@@ -1,5 +1,7 @@
 # GitHub Issue 规划
 
+> 2026-07-14 状态：I-05 至 I-13 的非 UI 核心代码和本地产物已完成；I-14 至 I-20 仍待 UI 与课程材料阶段执行。表中建议路径以实际扁平模块实现为准。
+
 本阶段仅规划，不创建远程 Issue。下表每行均给出任务名称、目标、背景、工作内容、文件/模块、完成条件、测试、优先级、阶段、前置依赖和 Label。
 
 | ID/任务名称 | 目标与背景 | 具体工作内容 | 涉及文件/模块 | 完成条件 | 测试方法 | 优先级 | 阶段 | 前置依赖 | 建议 Label |
@@ -7,8 +9,8 @@
 | I-01 建立最小工程骨架 | 让后续功能有统一入口；阶段一仅有数据/文档 | 创建包、配置、简单运行入口、pytest、依赖说明和 README | `src/`, `tests/`, `config/`, README | `python -m obesity_risk` 正常运行，pytest 全部通过 | 入口 smoke、pytest | high | 2 | 阶段一验收 | `type:feature`, `priority:high`, `stage:2` |
 | I-02 实现 YAML 配置与校验 | 消除业务硬编码；需明确错误 | 定义配置分区、读取、类型/比例/字段校验 | `config/default.yaml`, `config.py` | 合法配置对象可用，非法项指出路径 | 合法/缺项/比例和类型单测 | high | 2 | I-01 | `type:feature`, `type:test`, `stage:2` |
 | I-03 实现项目路径保护 | 防止路径越界或覆盖原始数据 | 固定根目录解析、路径防逃逸、目录冲突和原始文件存在性检查；不读取 CSV 内容 | `src/obesity_risk/paths.py`, `tests/test_paths.py` | 路径不逃逸；处理/输出目录不覆盖原始 CSV；原始文件缺失时明确报错 | 路径边界与临时空文件测试 | high | 2 | I-02 | `type:feature`, `type:test`, `stage:2` |
-| I-04 数据读取与 schema 检查 | 实际 CSV 是唯一事实源 | 只读加载、列/目标/type/空数据验证、哈希 | `data/loader.py`, tests | 正常读取 20,758×18；错误输入清晰失败 | fixture 与真实数据 smoke | high | 3 | 阶段二通过 | `type:data`, `priority:high`, `stage:3` |
-| I-05 数据质量与清洗报告 | 课程要求清洗且不得盲删 | 缺失/重复/范围/类别/异常/泄漏候选；配置化清洗并记录 | `data/quality.py`, `data/cleaning.py` | 报告前后数量和规则齐全，不改原文件 | 不变性、统计已知样例测试 | high | 3 | I-04、字段确认 | `type:data`, `type:test`, `stage:3` |
+| I-04 数据读取与 schema 检查（本地已完成） | 实际 CSV 是唯一事实源 | 只读加载、列/目标/type/空数据验证、哈希 | `data_loader.py`, `schema.py`, tests | 正常读取 20,758×18；错误输入清晰失败 | fixture、真实数据 smoke、前后快照 | high | 3 | 阶段二通过 | `type:data`, `priority:high`, `stage:3` |
+| I-05 数据质量与清洗报告（审查已完成，清洗待实现） | 课程要求清洗且不得盲删 | 缺失/重复/范围/类别/异常/泄漏候选；下一步配置化清洗并记录 | `data_audit.py`, `audit_report.py`；清洗模块待建 | 审查报告已生成；清洗前后数量和规则仍待完成 | 审查统计测试已通过；清洗测试待实现 | high | 3 | I-04、字段确认 | `type:data`, `type:test`, `stage:3` |
 | I-06 分层三分与预处理 | 防泄漏并统一四模型输入 | 固定索引、互斥三分、ColumnTransformer、训练拟合 | `data/split.py`, `preprocessing.py` | 比例/覆盖/复现/分层通过，测试集不 fit | 索引与 spy 拟合边界测试 | high | 3 | I-05 | `type:data`, `priority:high`, `stage:3` |
 | I-07 完成 EDA 与热力图 | 覆盖课题单/双/多变量要求 | 生成分布、箱线、关系图、热力图及文字元数据 | `analysis/`, `outputs/figures/` | Age/Height/Weight 三类分析和解释齐全 | 产物清单、统计/标题审查 | high | 3 | I-05 | `type:data`, `type:report`, `stage:3` |
 | I-08 sklearn 逻辑回归 | 建立可解释分类基线 | Pipeline 训练、概率、计时、基线参数 | `models/sklearn/logistic.py` | 固定划分训练成功并保存结果 | API、概率和集成测试 | high | 3 | I-06 | `type:model`, `priority:high`, `stage:3` |

@@ -1,0 +1,12 @@
+{
+  "model_name": "sklearn_mlp",
+  "path": "best_model.joblib",
+  "selection_metric": "validation_macro_f1",
+  "validation_macro_f1": 0.8745302543004357,
+  "tie_breakers": [
+    "validation_accuracy",
+    "training_time_seconds",
+    "fixed_model_order"
+  ],
+  "test_set_used_for_selection": false
+}

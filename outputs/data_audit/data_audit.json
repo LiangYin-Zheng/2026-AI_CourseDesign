@@ -1,0 +1,898 @@
+{
+  "dataset_summary": {
+    "row_count": 20758,
+    "column_count": 18,
+    "columns": [
+      "id",
+      "Gender",
+      "Age",
+      "Height",
+      "Weight",
+      "family_history_with_overweight",
+      "FAVC",
+      "FCVC",
+      "NCP",
+      "CAEC",
+      "SMOKE",
+      "CH2O",
+      "SCC",
+      "FAF",
+      "TUE",
+      "CALC",
+      "MTRANS",
+      "0be1dad"
+    ],
+    "fields": {
+      "id": {
+        "position": 0,
+        "dtype": "int64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 20758
+      },
+      "Gender": {
+        "position": 1,
+        "dtype": "object",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 2
+      },
+      "Age": {
+        "position": 2,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 1703
+      },
+      "Height": {
+        "position": 3,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 1833
+      },
+      "Weight": {
+        "position": 4,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 1979
+      },
+      "family_history_with_overweight": {
+        "position": 5,
+        "dtype": "int64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 2
+      },
+      "FAVC": {
+        "position": 6,
+        "dtype": "int64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 2
+      },
+      "FCVC": {
+        "position": 7,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 934
+      },
+      "NCP": {
+        "position": 8,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 689
+      },
+      "CAEC": {
+        "position": 9,
+        "dtype": "object",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 4
+      },
+      "SMOKE": {
+        "position": 10,
+        "dtype": "int64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 2
+      },
+      "CH2O": {
+        "position": 11,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 1506
+      },
+      "SCC": {
+        "position": 12,
+        "dtype": "int64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 2
+      },
+      "FAF": {
+        "position": 13,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 1360
+      },
+      "TUE": {
+        "position": 14,
+        "dtype": "float64",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 1297
+      },
+      "CALC": {
+        "position": 15,
+        "dtype": "object",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 3
+      },
+      "MTRANS": {
+        "position": 16,
+        "dtype": "object",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 5
+      },
+      "0be1dad": {
+        "position": 17,
+        "dtype": "object",
+        "non_null_count": 20758,
+        "missing_count": 0,
+        "missing_ratio": 0.0,
+        "unique_count": 7
+      }
+    },
+    "pandas_numeric_columns": [
+      "id",
+      "Age",
+      "Height",
+      "Weight",
+      "family_history_with_overweight",
+      "FAVC",
+      "FCVC",
+      "NCP",
+      "SMOKE",
+      "CH2O",
+      "SCC",
+      "FAF",
+      "TUE"
+    ],
+    "pandas_non_numeric_columns": [
+      "Gender",
+      "CAEC",
+      "CALC",
+      "MTRANS",
+      "0be1dad"
+    ]
+  },
+  "schema_summary": {
+    "is_valid": true,
+    "required_fields": [
+      "id",
+      "Gender",
+      "Age",
+      "Height",
+      "Weight",
+      "family_history_with_overweight",
+      "FAVC",
+      "FCVC",
+      "NCP",
+      "CAEC",
+      "SMOKE",
+      "CH2O",
+      "SCC",
+      "FAF",
+      "TUE",
+      "CALC",
+      "MTRANS",
+      "0be1dad"
+    ],
+    "numeric_fields": [
+      "Age",
+      "Height",
+      "Weight",
+      "FCVC",
+      "NCP",
+      "CH2O",
+      "FAF",
+      "TUE"
+    ],
+    "categorical_fields": [
+      "Gender",
+      "family_history_with_overweight",
+      "FAVC",
+      "CAEC",
+      "SMOKE",
+      "SCC",
+      "CALC",
+      "MTRANS"
+    ],
+    "excluded_fields": [
+      "id"
+    ],
+    "target_field": "0be1dad",
+    "allow_extra_columns": false,
+    "allow_missing_columns": false,
+    "allow_all_null_columns": false,
+    "column_order_matches": true,
+    "missing_columns": [],
+    "extra_columns": [],
+    "all_null_columns": [],
+    "numeric_type_mismatches": [],
+    "issues": []
+  },
+  "missing_summary": {
+    "total_missing": 0,
+    "total_missing_ratio": 0.0,
+    "by_field": {
+      "id": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "Gender": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "Age": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "Height": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "Weight": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "family_history_with_overweight": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "FAVC": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "FCVC": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "NCP": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "CAEC": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "SMOKE": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "CH2O": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "SCC": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "FAF": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "TUE": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "CALC": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "MTRANS": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      },
+      "0be1dad": {
+        "missing_count": 0,
+        "missing_ratio": 0.0
+      }
+    }
+  },
+  "duplicate_summary": {
+    "duplicate_row_count": 0,
+    "duplicate_row_ratio": 0.0
+  },
+  "numeric_summary": {
+    "id": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 10378.5,
+      "std": 5992.462779748128,
+      "min": 0.0,
+      "25%": 5189.25,
+      "50%": 10378.5,
+      "75%": 15567.75,
+      "max": 20757.0,
+      "negative_count": 0,
+      "zero_count": 1,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": null,
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "Age": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 23.841804418681953,
+      "std": 5.688071958787075,
+      "min": 14.0,
+      "25%": 20.0,
+      "50%": 22.815416,
+      "75%": 26.0,
+      "max": 61.0,
+      "negative_count": 0,
+      "zero_count": 0,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": [
+        11.0,
+        35.0
+      ],
+      "iqr_extreme_count": 1074,
+      "suspicious_range": [
+        0.0,
+        120.0
+      ],
+      "outside_suspicious_range_count": 0
+    },
+    "Height": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 1.7002449351575297,
+      "std": 0.08731190569718149,
+      "min": 1.45,
+      "25%": 1.631856,
+      "50%": 1.7,
+      "75%": 1.762887,
+      "max": 1.975663,
+      "negative_count": 0,
+      "zero_count": 0,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": [
+        1.4353094999999998,
+        1.9594335000000003
+      ],
+      "iqr_extreme_count": 4,
+      "suspicious_range": [
+        0.5,
+        2.5
+      ],
+      "outside_suspicious_range_count": 0
+    },
+    "Weight": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 87.88776840264958,
+      "std": 26.379443076406236,
+      "min": 39.0,
+      "25%": 66.0,
+      "50%": 84.064875,
+      "75%": 111.600553,
+      "max": 165.057269,
+      "negative_count": 0,
+      "zero_count": 0,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": [
+        -2.4008295000000146,
+        180.00138250000003
+      ],
+      "iqr_extreme_count": 0,
+      "suspicious_range": [
+        2.0,
+        500.0
+      ],
+      "outside_suspicious_range_count": 0
+    },
+    "family_history_with_overweight": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 0.819635803063879,
+      "std": 0.38449977305164007,
+      "min": 0.0,
+      "25%": 1.0,
+      "50%": 1.0,
+      "75%": 1.0,
+      "max": 1.0,
+      "negative_count": 0,
+      "zero_count": 3744,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": null,
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "FAVC": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 0.9144426245303016,
+      "std": 0.27971607063898857,
+      "min": 0.0,
+      "25%": 1.0,
+      "50%": 1.0,
+      "75%": 1.0,
+      "max": 1.0,
+      "negative_count": 0,
+      "zero_count": 1776,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": null,
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "FCVC": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 2.44590839271847,
+      "std": 0.5332181544582983,
+      "min": 1.0,
+      "25%": 2.0,
+      "50%": 2.393837,
+      "75%": 3.0,
+      "max": 3.0,
+      "negative_count": 0,
+      "zero_count": 0,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": [
+        0.5,
+        4.5
+      ],
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "NCP": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 2.7613323068214664,
+      "std": 0.7053745958837867,
+      "min": 1.0,
+      "25%": 3.0,
+      "50%": 3.0,
+      "75%": 3.0,
+      "max": 4.0,
+      "negative_count": 0,
+      "zero_count": 0,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": null,
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "SMOKE": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 0.011802678485403218,
+      "std": 0.1079997091051211,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 0.0,
+      "75%": 0.0,
+      "max": 1.0,
+      "negative_count": 0,
+      "zero_count": 20513,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": null,
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "CH2O": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 2.029418243665093,
+      "std": 0.6084670184548745,
+      "min": 1.0,
+      "25%": 1.792022,
+      "50%": 2.0,
+      "75%": 2.549617,
+      "max": 3.0,
+      "negative_count": 0,
+      "zero_count": 0,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": [
+        0.6556295000000001,
+        3.6860095
+      ],
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "SCC": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 0.033095673957028615,
+      "std": 0.17889072638858744,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 0.0,
+      "75%": 0.0,
+      "max": 1.0,
+      "negative_count": 0,
+      "zero_count": 20071,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": null,
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "FAF": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 0.9817465550756335,
+      "std": 0.8383019759696896,
+      "min": 0.0,
+      "25%": 0.008013,
+      "50%": 1.0,
+      "75%": 1.587406,
+      "max": 3.0,
+      "negative_count": 0,
+      "zero_count": 5044,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": [
+        -2.3610765000000002,
+        3.9564955000000004
+      ],
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    },
+    "TUE": {
+      "count": 20758,
+      "finite_count": 20758,
+      "mean": 0.6167562236968879,
+      "std": 0.6021134769922342,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 0.573887,
+      "75%": 1.0,
+      "max": 2.0,
+      "negative_count": 0,
+      "zero_count": 6566,
+      "unreasonable_zero_count": 0,
+      "infinite_count": 0,
+      "non_numeric_count": 0,
+      "iqr_bounds": [
+        -1.5,
+        2.5
+      ],
+      "iqr_extreme_count": 0,
+      "suspicious_range": null,
+      "outside_suspicious_range_count": 0
+    }
+  },
+  "categorical_summary": {
+    "Gender": {
+      "unique_count": 2,
+      "distribution": [
+        {
+          "value": "Female",
+          "count": 10422,
+          "ratio": 0.502071490509683
+        },
+        {
+          "value": "Male",
+          "count": 10336,
+          "ratio": 0.497928509490317
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    },
+    "family_history_with_overweight": {
+      "unique_count": 2,
+      "distribution": [
+        {
+          "value": 1,
+          "count": 17014,
+          "ratio": 0.819635803063879
+        },
+        {
+          "value": 0,
+          "count": 3744,
+          "ratio": 0.18036419693612102
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    },
+    "FAVC": {
+      "unique_count": 2,
+      "distribution": [
+        {
+          "value": 1,
+          "count": 18982,
+          "ratio": 0.9144426245303016
+        },
+        {
+          "value": 0,
+          "count": 1776,
+          "ratio": 0.08555737546969842
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    },
+    "CAEC": {
+      "unique_count": 4,
+      "distribution": [
+        {
+          "value": "Sometimes",
+          "count": 17529,
+          "ratio": 0.8444455149821756
+        },
+        {
+          "value": "Frequently",
+          "count": 2472,
+          "ratio": 0.11908661720782349
+        },
+        {
+          "value": "Always",
+          "count": 478,
+          "ratio": 0.023027266596011176
+        },
+        {
+          "value": "0",
+          "count": 279,
+          "ratio": 0.013440601213989788
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    },
+    "SMOKE": {
+      "unique_count": 2,
+      "distribution": [
+        {
+          "value": 0,
+          "count": 20513,
+          "ratio": 0.9881973215145968
+        },
+        {
+          "value": 1,
+          "count": 245,
+          "ratio": 0.011802678485403218
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    },
+    "SCC": {
+      "unique_count": 2,
+      "distribution": [
+        {
+          "value": 0,
+          "count": 20071,
+          "ratio": 0.9669043260429714
+        },
+        {
+          "value": 1,
+          "count": 687,
+          "ratio": 0.033095673957028615
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    },
+    "CALC": {
+      "unique_count": 3,
+      "distribution": [
+        {
+          "value": "Sometimes",
+          "count": 15066,
+          "ratio": 0.7257924655554485
+        },
+        {
+          "value": "0",
+          "count": 5163,
+          "ratio": 0.24872338375566047
+        },
+        {
+          "value": "Frequently",
+          "count": 529,
+          "ratio": 0.02548415068889103
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    },
+    "MTRANS": {
+      "unique_count": 5,
+      "distribution": [
+        {
+          "value": "Public_Transportation",
+          "count": 16687,
+          "ratio": 0.8038828403507081
+        },
+        {
+          "value": "Automobile",
+          "count": 3534,
+          "ratio": 0.17024761537720398
+        },
+        {
+          "value": "Walking",
+          "count": 467,
+          "ratio": 0.022497350419115523
+        },
+        {
+          "value": "Motorbike",
+          "count": 38,
+          "ratio": 0.001830619520184989
+        },
+        {
+          "value": "Bike",
+          "count": 32,
+          "ratio": 0.001541574332787359
+        }
+      ],
+      "leading_or_trailing_whitespace_count": 0,
+      "empty_string_count": 0,
+      "case_inconsistencies": [],
+      "similar_value_pairs": [],
+      "unexpected_values": []
+    }
+  },
+  "target_summary": {
+    "field": "0be1dad",
+    "class_count": 7,
+    "class_distribution": [
+      {
+        "value": "Obesity_Type_III",
+        "count": 4046,
+        "ratio": 0.19491280470180172
+      },
+      {
+        "value": "Obesity_Type_II",
+        "count": 3248,
+        "ratio": 0.15646979477791695
+      },
+      {
+        "value": "0rmal_Weight",
+        "count": 3082,
+        "ratio": 0.14847287792658254
+      },
+      {
+        "value": "Obesity_Type_I",
+        "count": 2910,
+        "ratio": 0.14018691588785046
+      },
+      {
+        "value": "Insufficient_Weight",
+        "count": 2523,
+        "ratio": 0.12154350130070335
+      },
+      {
+        "value": "Overweight_Level_II",
+        "count": 2522,
+        "ratio": 0.12149532710280374
+      },
+      {
+        "value": "Overweight_Level_I",
+        "count": 2427,
+        "ratio": 0.11691877830234126
+      }
+    ],
+    "most_frequent_class": {
+      "value": "Obesity_Type_III",
+      "count": 4046
+    },
+    "least_frequent_class": {
+      "value": "Overweight_Level_I",
+      "count": 2427
+    },
+    "max_min_count_ratio": 1.6670786979810466,
+    "imbalance_ratio_warning": 1.5,
+    "is_imbalanced": true,
+    "unexpected_values": []
+  },
+  "quality_issues": [
+    {
+      "code": "numeric_quality",
+      "severity": "warning",
+      "field": "Age",
+      "flags": {
+        "iqr_extreme_count": 1074
+      }
+    },
+    {
+      "code": "numeric_quality",
+      "severity": "warning",
+      "field": "Height",
+      "flags": {
+        "iqr_extreme_count": 4
+      }
+    },
+    {
+      "code": "target_imbalance",
+      "severity": "warning",
+      "ratio": 1.6670786979810466
+    }
+  ],
+  "file_snapshot": {
+    "name": "obesity_level.csv",
+    "size_bytes": 2444336,
+    "mtime_ns": 1783173784607927360,
+    "sha256": "04549179841220e7537ee9065fac9cf9446c6368133882b7199a5618ea541ee6"
+  }
+}

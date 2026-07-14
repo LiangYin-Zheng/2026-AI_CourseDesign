@@ -1,0 +1,630 @@
+{
+  "row_count": 20758,
+  "numeric_description": {
+    "Age": {
+      "count": 20758.0,
+      "mean": 23.841804,
+      "std": 5.688072,
+      "min": 14.0,
+      "25%": 20.0,
+      "50%": 22.815416,
+      "75%": 26.0,
+      "max": 61.0
+    },
+    "Height": {
+      "count": 20758.0,
+      "mean": 1.700245,
+      "std": 0.087312,
+      "min": 1.45,
+      "25%": 1.631856,
+      "50%": 1.7,
+      "75%": 1.762887,
+      "max": 1.975663
+    },
+    "Weight": {
+      "count": 20758.0,
+      "mean": 87.887768,
+      "std": 26.379443,
+      "min": 39.0,
+      "25%": 66.0,
+      "50%": 84.064875,
+      "75%": 111.600553,
+      "max": 165.057269
+    },
+    "FCVC": {
+      "count": 20758.0,
+      "mean": 2.445908,
+      "std": 0.533218,
+      "min": 1.0,
+      "25%": 2.0,
+      "50%": 2.393837,
+      "75%": 3.0,
+      "max": 3.0
+    },
+    "NCP": {
+      "count": 20758.0,
+      "mean": 2.761332,
+      "std": 0.705375,
+      "min": 1.0,
+      "25%": 3.0,
+      "50%": 3.0,
+      "75%": 3.0,
+      "max": 4.0
+    },
+    "CH2O": {
+      "count": 20758.0,
+      "mean": 2.029418,
+      "std": 0.608467,
+      "min": 1.0,
+      "25%": 1.792022,
+      "50%": 2.0,
+      "75%": 2.549617,
+      "max": 3.0
+    },
+    "FAF": {
+      "count": 20758.0,
+      "mean": 0.981747,
+      "std": 0.838302,
+      "min": 0.0,
+      "25%": 0.008013,
+      "50%": 1.0,
+      "75%": 1.587406,
+      "max": 3.0
+    },
+    "TUE": {
+      "count": 20758.0,
+      "mean": 0.616756,
+      "std": 0.602113,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 0.573887,
+      "75%": 1.0,
+      "max": 2.0
+    }
+  },
+  "target_distribution": {
+    "0rmal_Weight": {
+      "count": 3082,
+      "ratio": 0.14847287792658254
+    },
+    "Insufficient_Weight": {
+      "count": 2523,
+      "ratio": 0.12154350130070335
+    },
+    "Obesity_Type_I": {
+      "count": 2910,
+      "ratio": 0.14018691588785046
+    },
+    "Obesity_Type_II": {
+      "count": 3248,
+      "ratio": 0.15646979477791695
+    },
+    "Obesity_Type_III": {
+      "count": 4046,
+      "ratio": 0.19491280470180172
+    },
+    "Overweight_Level_I": {
+      "count": 2427,
+      "ratio": 0.11691877830234126
+    },
+    "Overweight_Level_II": {
+      "count": 2522,
+      "ratio": 0.12149532710280374
+    }
+  },
+  "grouped_numeric_means": {
+    "0rmal_Weight": {
+      "Age": 20.801388,
+      "Height": 1.670744,
+      "Weight": 61.533289,
+      "FCVC": 2.372249,
+      "NCP": 2.889552,
+      "CH2O": 1.806204,
+      "FAF": 1.18958,
+      "TUE": 0.630216
+    },
+    "Insufficient_Weight": {
+      "Age": 19.336502,
+      "Height": 1.683693,
+      "Weight": 49.860773,
+      "FCVC": 2.479756,
+      "NCP": 2.919554,
+      "CH2O": 1.744163,
+      "FAF": 1.201782,
+      "TUE": 0.802901
+    },
+    "Obesity_Type_I": {
+      "Age": 25.023615,
+      "Height": 1.693509,
+      "Weight": 92.371026,
+      "FCVC": 2.097052,
+      "NCP": 2.454551,
+      "CH2O": 2.129783,
+      "FAF": 0.92271,
+      "TUE": 0.739477
+    },
+    "Obesity_Type_II": {
+      "Age": 27.707128,
+      "Height": 1.782715,
+      "Weight": 115.995914,
+      "FCVC": 2.425227,
+      "NCP": 2.798439,
+      "CH2O": 1.985064,
+      "FAF": 1.029579,
+      "TUE": 0.415601
+    },
+    "Obesity_Type_III": {
+      "Age": 24.126847,
+      "Height": 1.676007,
+      "Weight": 117.697452,
+      "FCVC": 3.0,
+      "NCP": 2.99995,
+      "CH2O": 2.332338,
+      "FAF": 0.549225,
+      "TUE": 0.548849
+    },
+    "Overweight_Level_I": {
+      "Age": 23.045197,
+      "Height": 1.68688,
+      "Weight": 74.228266,
+      "FCVC": 2.256583,
+      "NCP": 2.528178,
+      "CH2O": 2.069366,
+      "FAF": 1.134657,
+      "TUE": 0.557014
+    },
+    "Overweight_Level_II": {
+      "Age": 26.032084,
+      "Height": 1.706163,
+      "Weight": 82.085513,
+      "FCVC": 2.224499,
+      "NCP": 2.594109,
+      "CH2O": 2.00447,
+      "FAF": 1.060895,
+      "TUE": 0.697984
+    }
+  },
+  "grouped_numeric_medians": {
+    "0rmal_Weight": {
+      "Age": 21.0,
+      "Height": 1.66,
+      "Weight": 60.0,
+      "FCVC": 2.0,
+      "NCP": 3.0,
+      "CH2O": 2.0,
+      "FAF": 1.0,
+      "TUE": 1.0
+    },
+    "Insufficient_Weight": {
+      "Age": 19.0,
+      "Height": 1.7,
+      "Weight": 50.0,
+      "FCVC": 2.76632,
+      "NCP": 3.0,
+      "CH2O": 2.0,
+      "FAF": 1.0,
+      "TUE": 1.0
+    },
+    "Obesity_Type_I": {
+      "Age": 22.851773,
+      "Height": 1.694806,
+      "Weight": 90.116124,
+      "FCVC": 2.0,
+      "NCP": 3.0,
+      "CH2O": 2.0,
+      "FAF": 1.0,
+      "TUE": 0.666305
+    },
+    "Obesity_Type_II": {
+      "Age": 26.699317,
+      "Height": 1.773506,
+      "Weight": 118.332966,
+      "FCVC": 2.499388,
+      "NCP": 3.0,
+      "CH2O": 2.014592,
+      "FAF": 1.0,
+      "TUE": 0.091538
+    },
+    "Obesity_Type_III": {
+      "Age": 25.957018,
+      "Height": 1.643421,
+      "Weight": 111.914361,
+      "FCVC": 3.0,
+      "NCP": 3.0,
+      "CH2O": 2.618198,
+      "FAF": 0.035091,
+      "TUE": 0.561632
+    },
+    "Overweight_Level_I": {
+      "Age": 21.0,
+      "Height": 1.7,
+      "Weight": 75.0,
+      "FCVC": 2.0,
+      "NCP": 3.0,
+      "CH2O": 2.0,
+      "FAF": 1.0,
+      "TUE": 0.133566
+    },
+    "Overweight_Level_II": {
+      "Age": 23.0,
+      "Height": 1.7,
+      "Weight": 81.62714,
+      "FCVC": 2.0,
+      "NCP": 3.0,
+      "CH2O": 2.0,
+      "FAF": 1.0,
+      "TUE": 0.930051
+    }
+  },
+  "numeric_correlations": {
+    "Age": {
+      "Age": 1.0,
+      "Height": -0.011713,
+      "Weight": 0.283381,
+      "FCVC": 0.034414,
+      "NCP": -0.048479,
+      "CH2O": -0.016325,
+      "FAF": -0.192259,
+      "TUE": -0.296154
+    },
+    "Height": {
+      "Age": -0.011713,
+      "Height": 1.0,
+      "Weight": 0.416677,
+      "FCVC": -0.071546,
+      "NCP": 0.191383,
+      "CH2O": 0.183706,
+      "FAF": 0.295278,
+      "TUE": 0.076433
+    },
+    "Weight": {
+      "Age": 0.283381,
+      "Height": 0.416677,
+      "Weight": 1.0,
+      "FCVC": 0.245682,
+      "NCP": 0.095947,
+      "CH2O": 0.317914,
+      "FAF": -0.084845,
+      "TUE": -0.086471
+    },
+    "FCVC": {
+      "Age": 0.034414,
+      "Height": -0.071546,
+      "Weight": 0.245682,
+      "FCVC": 1.0,
+      "NCP": 0.113349,
+      "CH2O": 0.101299,
+      "FAF": -0.089822,
+      "TUE": -0.147843
+    },
+    "NCP": {
+      "Age": -0.048479,
+      "Height": 0.191383,
+      "Weight": 0.095947,
+      "FCVC": 0.113349,
+      "NCP": 1.0,
+      "CH2O": 0.080949,
+      "FAF": 0.100871,
+      "TUE": 0.067459
+    },
+    "CH2O": {
+      "Age": -0.016325,
+      "Height": 0.183706,
+      "Weight": 0.317914,
+      "FCVC": 0.101299,
+      "NCP": 0.080949,
+      "CH2O": 1.0,
+      "FAF": 0.082932,
+      "TUE": -0.010654
+    },
+    "FAF": {
+      "Age": -0.192259,
+      "Height": 0.295278,
+      "Weight": -0.084845,
+      "FCVC": -0.089822,
+      "NCP": 0.100871,
+      "CH2O": 0.082932,
+      "FAF": 1.0,
+      "TUE": 0.021213
+    },
+    "TUE": {
+      "Age": -0.296154,
+      "Height": 0.076433,
+      "Weight": -0.086471,
+      "FCVC": -0.147843,
+      "NCP": 0.067459,
+      "CH2O": -0.010654,
+      "FAF": 0.021213,
+      "TUE": 1.0
+    }
+  },
+  "categorical_target_column_ratios": {
+    "Gender": {
+      "0rmal_Weight": {
+        "Female": 0.538611,
+        "Male": 0.461389
+      },
+      "Insufficient_Weight": {
+        "Female": 0.642489,
+        "Male": 0.357511
+      },
+      "Obesity_Type_I": {
+        "Female": 0.435395,
+        "Male": 0.564605
+      },
+      "Obesity_Type_II": {
+        "Female": 0.002463,
+        "Male": 0.997537
+      },
+      "Obesity_Type_III": {
+        "Female": 0.998764,
+        "Male": 0.001236
+      },
+      "Overweight_Level_I": {
+        "Female": 0.440874,
+        "Male": 0.559126
+      },
+      "Overweight_Level_II": {
+        "Female": 0.299366,
+        "Male": 0.700634
+      }
+    },
+    "family_history_with_overweight": {
+      "0rmal_Weight": {
+        "0": 0.419208,
+        "1": 0.580792
+      },
+      "Insufficient_Weight": {
+        "0": 0.574316,
+        "1": 0.425684
+      },
+      "Obesity_Type_I": {
+        "0": 0.016495,
+        "1": 0.983505
+      },
+      "Obesity_Type_II": {
+        "0": 0.001539,
+        "1": 0.998461
+      },
+      "Obesity_Type_III": {
+        "0": 0.000247,
+        "1": 0.999753
+      },
+      "Overweight_Level_I": {
+        "0": 0.311496,
+        "1": 0.688504
+      },
+      "Overweight_Level_II": {
+        "0": 0.076527,
+        "1": 0.923473
+      }
+    },
+    "FAVC": {
+      "0rmal_Weight": {
+        "0": 0.16061,
+        "1": 0.83939
+      },
+      "Insufficient_Weight": {
+        "0": 0.146651,
+        "1": 0.853349
+      },
+      "Obesity_Type_I": {
+        "0": 0.031959,
+        "1": 0.968041
+      },
+      "Obesity_Type_II": {
+        "0": 0.016626,
+        "1": 0.983374
+      },
+      "Obesity_Type_III": {
+        "0": 0.000247,
+        "1": 0.999753
+      },
+      "Overweight_Level_I": {
+        "0": 0.092295,
+        "1": 0.907705
+      },
+      "Overweight_Level_II": {
+        "0": 0.213719,
+        "1": 0.786281
+      }
+    },
+    "CAEC": {
+      "0rmal_Weight": {
+        "0": 0.011681,
+        "Always": 0.089228,
+        "Frequently": 0.229072,
+        "Sometimes": 0.670019
+      },
+      "Insufficient_Weight": {
+        "0": 0.003171,
+        "Always": 0.013872,
+        "Frequently": 0.48038,
+        "Sometimes": 0.502576
+      },
+      "Obesity_Type_I": {
+        "0": 0.002749,
+        "Always": 0.021993,
+        "Frequently": 0.019244,
+        "Sometimes": 0.956014
+      },
+      "Obesity_Type_II": {
+        "0": 0.000616,
+        "Always": 0.003079,
+        "Frequently": 0.003695,
+        "Sometimes": 0.992611
+      },
+      "Obesity_Type_III": {
+        "0": 0.0,
+        "Always": 0.000247,
+        "Frequently": 0.000741,
+        "Sometimes": 0.999011
+      },
+      "Overweight_Level_I": {
+        "0": 0.090235,
+        "Always": 0.024722,
+        "Frequently": 0.112485,
+        "Sometimes": 0.772559
+      },
+      "Overweight_Level_II": {
+        "0": 0.002379,
+        "Always": 0.013085,
+        "Frequently": 0.083267,
+        "Sometimes": 0.901269
+      }
+    },
+    "SMOKE": {
+      "0rmal_Weight": {
+        "0": 0.985075,
+        "1": 0.014925
+      },
+      "Insufficient_Weight": {
+        "0": 0.997226,
+        "1": 0.002774
+      },
+      "Obesity_Type_I": {
+        "0": 0.991753,
+        "1": 0.008247
+      },
+      "Obesity_Type_II": {
+        "0": 0.964901,
+        "1": 0.035099
+      },
+      "Obesity_Type_III": {
+        "0": 0.999011,
+        "1": 0.000989
+      },
+      "Overweight_Level_I": {
+        "0": 0.989699,
+        "1": 0.010301
+      },
+      "Overweight_Level_II": {
+        "0": 0.990087,
+        "1": 0.009913
+      }
+    },
+    "SCC": {
+      "0rmal_Weight": {
+        "0": 0.948086,
+        "1": 0.051914
+      },
+      "Insufficient_Weight": {
+        "0": 0.908046,
+        "1": 0.091954
+      },
+      "Obesity_Type_I": {
+        "0": 0.993814,
+        "1": 0.006186
+      },
+      "Obesity_Type_II": {
+        "0": 0.998768,
+        "1": 0.001232
+      },
+      "Obesity_Type_III": {
+        "0": 1.0,
+        "1": 0.0
+      },
+      "Overweight_Level_I": {
+        "0": 0.897404,
+        "1": 0.102596
+      },
+      "Overweight_Level_II": {
+        "0": 0.990484,
+        "1": 0.009516
+      }
+    },
+    "CALC": {
+      "0rmal_Weight": {
+        "0": 0.348475,
+        "Frequently": 0.022064,
+        "Sometimes": 0.629461
+      },
+      "Insufficient_Weight": {
+        "0": 0.352358,
+        "Frequently": 0.005549,
+        "Sometimes": 0.642093
+      },
+      "Obesity_Type_I": {
+        "0": 0.477663,
+        "Frequently": 0.026117,
+        "Sometimes": 0.49622
+      },
+      "Obesity_Type_II": {
+        "0": 0.14101,
+        "Frequently": 0.004002,
+        "Sometimes": 0.854988
+      },
+      "Obesity_Type_III": {
+        "0": 0.0,
+        "Frequently": 0.0,
+        "Sometimes": 1.0
+      },
+      "Overweight_Level_I": {
+        "0": 0.138855,
+        "Frequently": 0.053564,
+        "Sometimes": 0.807581
+      },
+      "Overweight_Level_II": {
+        "0": 0.402458,
+        "Frequently": 0.090404,
+        "Sometimes": 0.507137
+      }
+    },
+    "MTRANS": {
+      "0rmal_Weight": {
+        "Automobile": 0.10026,
+        "Bike": 0.004543,
+        "Motorbike": 0.005516,
+        "Public_Transportation": 0.832252,
+        "Walking": 0.05743
+      },
+      "Insufficient_Weight": {
+        "Automobile": 0.10979,
+        "Bike": 0.000793,
+        "Motorbike": 0.001585,
+        "Public_Transportation": 0.858502,
+        "Walking": 0.02933
+      },
+      "Obesity_Type_I": {
+        "Automobile": 0.256701,
+        "Bike": 0.000687,
+        "Motorbike": 0.001375,
+        "Public_Transportation": 0.732646,
+        "Walking": 0.008591
+      },
+      "Obesity_Type_II": {
+        "Automobile": 0.29064,
+        "Bike": 0.000308,
+        "Motorbike": 0.000924,
+        "Public_Transportation": 0.706281,
+        "Walking": 0.001847
+      },
+      "Obesity_Type_III": {
+        "Automobile": 0.0,
+        "Bike": 0.0,
+        "Motorbike": 0.0,
+        "Public_Transportation": 1.0,
+        "Walking": 0.0
+      },
+      "Overweight_Level_I": {
+        "Automobile": 0.195715,
+        "Bike": 0.003708,
+        "Motorbike": 0.002884,
+        "Public_Transportation": 0.756077,
+        "Walking": 0.041615
+      },
+      "Overweight_Level_II": {
+        "Automobile": 0.310071,
+        "Bike": 0.001586,
+        "Motorbike": 0.00119,
+        "Public_Transportation": 0.653846,
+        "Walking": 0.033307
+      }
+    }
+  },
+  "key_group_mean_ranges": {
+    "Age": 8.370626000000001,
+    "Height": 0.11197100000000004,
+    "Weight": 67.836679
+  }
+}
