@@ -3,7 +3,7 @@ from pathlib import Path
 
 # 返回包含源码、配置和数据目录的项目根目录
 def get_project_root() -> Path:
-    """返回当前安装源码对应的项目根目录。"""
+    # 返回当前安装源码对应的项目根目录。
     return Path(__file__).resolve().parents[2]
 
 
@@ -15,7 +15,7 @@ def _ensure_inside_project(project_root: Path, path: Path, field_name: str) -> N
 
 # 解析并校验所有读写路径
 def get_project_paths(project_root: Path, config: dict) -> dict[str, Path]:
-    """解析项目路径，并阻止任何输出覆盖原始 CSV。"""
+    # 解析项目路径，并阻止任何输出覆盖原始 CSV。
     project_root = project_root.resolve()
     relative_paths = {
         "raw_data": config["data"]["raw_path"],

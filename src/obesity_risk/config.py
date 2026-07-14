@@ -148,7 +148,7 @@ def _validate_path_strings(config: dict) -> None:
 
 # 校验项目完整配置
 def validate_config(config: dict) -> None:
-    """校验配置结构和流程所需的安全约束。"""
+    # 校验配置结构和流程所需的安全约束。
     _validate_required_fields(config)
     _validate_data_config(config["data"])
     _validate_split_config(config["split"])
@@ -159,7 +159,7 @@ def validate_config(config: dict) -> None:
 
 # 读取 YAML 配置并执行校验
 def load_config(config_path: Path) -> dict:
-    """读取指定 YAML 配置并返回校验后的字典。"""
+    # 读取指定 YAML 配置并返回校验后的字典。
     if not config_path.is_file():
         raise FileNotFoundError("配置文件不存在")
     try:

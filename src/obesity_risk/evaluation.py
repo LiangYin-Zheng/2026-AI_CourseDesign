@@ -18,7 +18,7 @@ from obesity_risk.io_utils import write_json, write_text
 def evaluate_predictions(
     true_labels: np.ndarray, predicted_labels: np.ndarray, class_names: list[str]
 ) -> dict:
-    """计算准确率、宏/加权指标、混淆矩阵和分类报告。"""
+    # 计算准确率、宏/加权指标、混淆矩阵和分类报告。
     labels = np.arange(len(class_names))
     macro = precision_recall_fscore_support(
         true_labels, predicted_labels, labels=labels, average="macro", zero_division=0
@@ -52,7 +52,7 @@ def evaluate_predictions(
 def save_confusion_matrix(
     matrix: list[list[int]], class_names: list[str], path: Path, title: str
 ) -> Path:
-    """保存带类别标签和计数的混淆矩阵 PNG。"""
+    # 保存带类别标签和计数的混淆矩阵 PNG。
     values = np.asarray(matrix)
     figure, axis = plt.subplots(figsize=(9, 7))
     image = axis.imshow(values, cmap="Blues")
@@ -89,7 +89,7 @@ def save_confusion_matrix(
 def save_loss_curve(
     train_history: list[float], validation_history: list[float], path: Path, title: str
 ) -> Path:
-    """保存训练损失及可选验证损失曲线。"""
+    # 保存训练损失及可选验证损失曲线。
     figure, axis = plt.subplots(figsize=(8, 5))
     axis.plot(train_history, label="Train loss")
     if validation_history:
@@ -143,7 +143,7 @@ def _classification_markdown(model_result: dict, class_names: list[str]) -> str:
 def save_evaluation_artifacts(
     model_result: dict, class_names: list[str], metrics_dir: Path
 ) -> dict[str, Path]:
-    """写出一个模型的完整评估证据。"""
+    # 写出一个模型的完整评估证据。
     model_name = model_result["model_name"]
     paths = {
         "json": write_json(metrics_dir / f"{model_name}_metrics.json", model_result),

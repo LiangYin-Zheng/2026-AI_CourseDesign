@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from model.training import train_manual_models, train_sklearn_models
 from obesity_risk.audit_report import write_audit_reports
 from obesity_risk.config import load_config
 from obesity_risk.data_audit import audit_dataframe
@@ -19,8 +20,6 @@ from obesity_risk.preparation import (
     save_prepared_artifacts,
 )
 from obesity_risk.schema import DatasetSchema, build_schema
-from obesity_risk.training import train_manual_models, train_sklearn_models
-
 
 MODEL_NAMES = (
     "sklearn_logistic",
@@ -30,8 +29,10 @@ MODEL_NAMES = (
 )
 
 
-def load_workflow_context(config_path: Path | None = None) -> tuple[dict, dict[str, Path]]:
-    """返回工作流共享的配置和已校验路径。"""
+def load_workflow_context(
+    config_path: Path | None = None,
+) -> tuple[dict, dict[str, Path]]:
+    # 返回工作流共享的配置和已校验路径。
     project_root = get_project_root()
     selected_path = config_path or project_root / "config" / "default.yaml"
     if not selected_path.is_absolute():
@@ -41,7 +42,7 @@ def load_workflow_context(config_path: Path | None = None) -> tuple[dict, dict[s
 
 
 def run_audit_workflow(config: dict, paths: dict[str, Path]) -> dict[str, Path]:
-    """生成 JSON 和 Markdown 数据审查报告。"""
+    # 生成 JSON 和 Markdown 数据审查报告。
     before = snapshot_file(paths["raw_data"])
     frame = load_csv_readonly(paths["raw_data"])
     result = audit_dataframe(
@@ -59,7 +60,7 @@ def run_audit_workflow(config: dict, paths: dict[str, Path]) -> dict[str, Path]:
 def prepare_workflow_data(
     config: dict, paths: dict[str, Path]
 ) -> tuple[pd.DataFrame, DatasetSchema, PreparedData]:
-    """清洗、分层划分和预处理真实数据，并保存准备产物。"""
+    # 清洗、分层划分和预处理真实数据，并保存准备产物。
     before = snapshot_file(paths["raw_data"])
     frame = load_csv_readonly(paths["raw_data"])
     schema = build_schema(config)
@@ -72,7 +73,7 @@ def prepare_workflow_data(
 
 
 def build_model_comparison(paths: dict[str, Path]) -> tuple[pd.DataFrame, dict]:
-    """生成测试集展示排名，并按验证集指标选择部署模型。"""
+    # 生成测试集展示排名，并按验证集指标选择部署模型。
     results = []
     for model_name in MODEL_NAMES:
         metric_path = paths["metrics_dir"] / f"{model_name}_metrics.json"
@@ -109,9 +110,13 @@ def build_model_comparison(paths: dict[str, Path]) -> tuple[pd.DataFrame, dict]:
         ),
     )
     selected_name = selected_result["model_name"]
-    comparison = pd.DataFrame(rows).sort_values(
-        ["macro_f1", "accuracy", "model_name"], ascending=[False, False, True]
-    ).reset_index(drop=True)
+    comparison = (
+        pd.DataFrame(rows)
+        .sort_values(
+            ["macro_f1", "accuracy", "model_name"], ascending=[False, False, True]
+        )
+        .reset_index(drop=True)
+    )
     comparison.insert(0, "rank", np.arange(1, len(comparison) + 1))
     comparison["selected_for_deployment"] = comparison["model_name"].eq(selected_name)
     paths["metrics_dir"].mkdir(parents=True, exist_ok=True)
@@ -167,12 +172,20 @@ def _largest_confusion(result: dict) -> dict:
 
 
 def write_experiment_summary(paths: dict[str, Path], comparison_summary: dict) -> Path:
-    """根据真实审查、EDA 和模型指标生成 Markdown 实验总结。"""
-    audit = json.loads((paths["audit_report_dir"] / "data_audit.json").read_text(encoding="utf-8"))
-    split = json.loads((paths["processed_dir"] / "split_summary.json").read_text(encoding="utf-8"))
-    eda = json.loads((paths["figures_dir"].parent / "eda_summary.json").read_text(encoding="utf-8"))
+    # 根据真实审查、EDA 和模型指标生成 Markdown 实验总结。
+    audit = json.loads(
+        (paths["audit_report_dir"] / "data_audit.json").read_text(encoding="utf-8")
+    )
+    split = json.loads(
+        (paths["processed_dir"] / "split_summary.json").read_text(encoding="utf-8")
+    )
+    eda = json.loads(
+        (paths["figures_dir"].parent / "eda_summary.json").read_text(encoding="utf-8")
+    )
     results = {
-        name: json.loads((paths["metrics_dir"] / f"{name}_metrics.json").read_text(encoding="utf-8"))
+        name: json.loads(
+            (paths["metrics_dir"] / f"{name}_metrics.json").read_text(encoding="utf-8")
+        )
         for name in MODEL_NAMES
     }
     selected_name = comparison_summary["selected_model"]
@@ -239,7 +252,7 @@ def write_experiment_summary(paths: dict[str, Path], comparison_summary: dict) -
 
 
 def run_all(config: dict, paths: dict[str, Path]) -> dict:
-    """按审查、准备、EDA、sklearn、手写、比较顺序执行完整流程。"""
+    # 按审查、准备、EDA、sklearn、手写、比较顺序执行完整流程。
     before = snapshot_file(paths["raw_data"])
     audit_paths = run_audit_workflow(config, paths)
     cleaned, schema, prepared = prepare_workflow_data(config, paths)

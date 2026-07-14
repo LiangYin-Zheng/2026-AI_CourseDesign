@@ -7,7 +7,7 @@ from pandas.errors import EmptyDataError, ParserError
 
 # 表示原始 CSV 无法安全读取
 class DataLoadError(ValueError):
-    """表示原始 CSV 无法安全读取。"""
+    error_code = "data_load_error"
 
 
 # 检查 CSV 路径是否存在、是普通文件且扩展名正确

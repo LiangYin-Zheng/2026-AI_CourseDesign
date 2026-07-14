@@ -140,7 +140,7 @@ def _plot_multivariable_scatter(
 
 # 生成 EDA 结构化摘要
 def build_eda_summary(frame: pd.DataFrame, schema: DatasetSchema) -> dict:
-    """汇总单变量、双变量和多变量分析所需统计量。"""
+    # 汇总单变量、双变量和多变量分析所需统计量。
     numeric_columns = list(schema.numeric_columns)
     target = schema.target_column
     numeric_description = frame[numeric_columns].describe().round(6).to_dict()
@@ -227,7 +227,7 @@ def run_eda(
     eda_config: dict,
     random_seed: int,
 ) -> dict[str, Path]:
-    """生成课程要求的单变量、双变量和多变量 EDA 产物。"""
+    # 生成课程要求的单变量、双变量和多变量 EDA 产物。
     dpi = int(eda_config["dpi"])
     figure_paths = [
         _plot_numeric_distributions(

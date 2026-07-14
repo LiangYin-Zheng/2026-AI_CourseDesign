@@ -1,8 +1,8 @@
 import argparse
 from pathlib import Path
 
+from model.training import train_manual_models, train_sklearn_models
 from obesity_risk.eda import run_eda
-from obesity_risk.training import train_manual_models, train_sklearn_models
 from obesity_risk.workflows import (
     build_model_comparison,
     load_workflow_context,
@@ -11,7 +11,6 @@ from obesity_risk.workflows import (
     run_audit_workflow,
     write_experiment_summary,
 )
-
 
 COMMANDS = (
     "audit-data",
@@ -34,7 +33,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 # 执行一个已解析的项目命令
-def _execute_command(command: str | None, config: dict, paths: dict, model: str | None) -> str:
+def _execute_command(
+    command: str | None, config: dict, paths: dict, model: str | None
+) -> str:
     if command is None:
         return "项目配置检查通过，原始数据文件已找到"
     if command == "audit-data":
@@ -78,12 +79,18 @@ def _execute_command(command: str | None, config: dict, paths: dict, model: str 
 
 # 解析命令、集中处理用户可见错误并返回退出码
 def main(argv: list[str] | None = None) -> int:
-    """运行肥胖风险预测项目的命令行入口。"""
+    # 运行肥胖风险预测项目的命令行入口。
     args = _build_parser().parse_args(argv)
     try:
         config, paths = load_workflow_context(args.config)
         message = _execute_command(args.command, config, paths, args.model)
-    except (FileNotFoundError, OSError, ValueError, RuntimeError, FloatingPointError) as error:
+    except (
+        FileNotFoundError,
+        OSError,
+        ValueError,
+        RuntimeError,
+        FloatingPointError,
+    ) as error:
         print(f"项目运行失败：{error}")
         return 1
     print(message)
