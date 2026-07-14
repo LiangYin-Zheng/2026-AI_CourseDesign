@@ -1,9 +1,7 @@
 import argparse
 from pathlib import Path
 
-from model.training import train_manual_models, train_sklearn_models
-from obesity_risk.eda import run_eda
-from obesity_risk.workflows import (
+from application.workflows import (
     build_model_comparison,
     load_workflow_context,
     prepare_workflow_data,
@@ -11,6 +9,8 @@ from obesity_risk.workflows import (
     run_audit_workflow,
     write_experiment_summary,
 )
+from data.eda import run_eda
+from model.training import train_manual_models, train_sklearn_models
 
 COMMANDS = (
     "audit-data",
@@ -25,7 +25,7 @@ COMMANDS = (
 
 # 创建保持简洁的非 UI 命令行解析器
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="python -m obesity_risk")
+    parser = argparse.ArgumentParser(prog="python src/main.py")
     parser.add_argument("command", nargs="?", choices=COMMANDS)
     parser.add_argument("--config", type=Path, help="YAML 配置路径")
     parser.add_argument("--model", choices=("logistic", "mlp"), help="仅训练一个算法")

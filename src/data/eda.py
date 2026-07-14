@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from obesity_risk.io_utils import write_json, write_text
-from obesity_risk.schema import DatasetSchema
+from core.io import write_json, write_text
+from core.schema import DatasetSchema
 
 
 # 保存图形并及时释放 Matplotlib 资源

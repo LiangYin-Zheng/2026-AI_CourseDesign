@@ -5,21 +5,21 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from model.training import train_manual_models, train_sklearn_models
-from obesity_risk.audit_report import write_audit_reports
-from obesity_risk.config import load_config
-from obesity_risk.data_audit import audit_dataframe
-from obesity_risk.data_loader import DataLoadError, load_csv_readonly, snapshot_file
-from obesity_risk.eda import run_eda
-from obesity_risk.io_utils import write_json, write_text
-from obesity_risk.paths import get_project_paths, get_project_root
-from obesity_risk.preparation import (
+from core.config import load_config
+from core.io import write_json, write_text
+from core.paths import get_project_paths, get_project_root
+from core.schema import DatasetSchema, build_schema
+from data.audit import audit_dataframe
+from data.eda import run_eda
+from data.loader import DataLoadError, load_csv_readonly, snapshot_file
+from data.preparation import (
     PreparedData,
     clean_dataframe,
     prepare_dataframe,
     save_prepared_artifacts,
 )
-from obesity_risk.schema import DatasetSchema, build_schema
+from evaluation.reports import write_audit_reports
+from model.training import train_manual_models, train_sklearn_models
 
 MODEL_NAMES = (
     "sklearn_logistic",
@@ -203,6 +203,13 @@ def write_experiment_summary(paths: dict[str, Path], comparison_summary: dict) -
         )
     ranges = eda["key_group_mean_ranges"]
     key_feature = max(ranges, key=ranges.get)
+    binning = split["preprocessing"]["numeric_binning"]
+    binning_description = ""
+    if binning["enabled"]:
+        binning_description = (
+            f"并行增加仅在训练集拟合的 {binning['n_bins']} 箱 "
+            f"{binning['strategy']} 数值分箱独热特征；"
+        )
     lines = [
         "# 非 UI 核心实验总结",
         "",
@@ -212,7 +219,7 @@ def write_experiment_summary(paths: dict[str, Path], comparison_summary: dict) -
         "",
         "## 2. 清洗、预处理与划分",
         "",
-        f"{split['cleaning']['rule']}。BMI 未加入模型：{split['cleaning']['bmi_reason']}。数值列使用训练集 median 填补并标准化，类别列使用训练集众数填补与未知类别安全独热编码。训练/验证/测试样本数分别为 {split['splits']['train']['sample_count']}、{split['splits']['validation']['sample_count']}、{split['splits']['test']['sample_count']}，三者按目标分层且索引互斥。",
+        f"{split['cleaning']['rule']}。BMI 未加入模型：{split['cleaning']['bmi_reason']}。数值列使用训练集 median 填补并标准化，{binning_description}类别列使用训练集众数填补与未知类别安全独热编码。训练/验证/测试样本数分别为 {split['splits']['train']['sample_count']}、{split['splits']['validation']['sample_count']}、{split['splits']['test']['sample_count']}，三者按目标分层且索引互斥。",
         "",
         "## 3. EDA 主要结论",
         "",

@@ -12,7 +12,7 @@ from sklearn.metrics import (
     precision_recall_fscore_support,
 )
 
-from obesity_risk.io_utils import write_json, write_text
+from core.io import write_json, write_text
 
 
 def evaluate_predictions(

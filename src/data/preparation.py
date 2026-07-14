@@ -8,10 +8,15 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
+from sklearn.preprocessing import (
+    KBinsDiscretizer,
+    LabelEncoder,
+    OneHotEncoder,
+    StandardScaler,
+)
 
-from obesity_risk.io_utils import write_json
-from obesity_risk.schema import DatasetSchema, validate_schema
+from core.io import write_json
+from core.schema import DatasetSchema, validate_schema
 
 
 @dataclass
@@ -136,6 +141,7 @@ def stratified_split_indices(
 # 创建只在训练数据上拟合的列预处理器
 def build_preprocessor(schema: DatasetSchema, preprocessing_config: dict) -> ColumnTransformer:
     # 创建数值填补/缩放和类别填补/独热编码预处理器。
+    numeric_columns = list(schema.numeric_columns)
     numeric_steps: list[tuple[str, object]] = [
         ("imputer", SimpleImputer(strategy=preprocessing_config["numeric_imputation"]))
     ]
@@ -155,11 +161,39 @@ def build_preprocessor(schema: DatasetSchema, preprocessing_config: dict) -> Col
             ),
         ]
     )
+    transformers: list[tuple[str, object, list[str]]] = [
+        ("numeric", numeric_pipeline, numeric_columns),
+        ("categorical", categorical_pipeline, list(schema.categorical_columns)),
+    ]
+    binning_config = preprocessing_config["numeric_binning"]
+    if binning_config["enabled"]:
+        # 连续值与分箱值并行保留，帮助线性层表达非线性区间边界。
+        numeric_binning_pipeline = Pipeline(
+            [
+                (
+                    "imputer",
+                    SimpleImputer(
+                        strategy=preprocessing_config["numeric_imputation"]
+                    ),
+                ),
+                (
+                    "discretizer",
+                    KBinsDiscretizer(
+                        n_bins=int(binning_config["n_bins"]),
+                        encode="onehot-dense",
+                        strategy=binning_config["strategy"],
+                        quantile_method="linear",
+                        dtype=np.float64,
+                        subsample=None,
+                    ),
+                ),
+            ]
+        )
+        transformers.append(
+            ("numeric_binned", numeric_binning_pipeline, numeric_columns)
+        )
     return ColumnTransformer(
-        [
-            ("numeric", numeric_pipeline, list(schema.numeric_columns)),
-            ("categorical", categorical_pipeline, list(schema.categorical_columns)),
-        ],
+        transformers,
         remainder="drop",
         verbose_feature_names_out=False,
     )
@@ -216,7 +250,23 @@ def save_prepared_artifacts(prepared: PreparedData, processed_dir: Path) -> dict
     # 保存划分摘要、索引、特征元数据和训练集预处理器。
     processed_dir.mkdir(parents=True, exist_ok=True)
     labels = prepared.label_encoder.classes_.tolist()
-    split_summary = {"cleaning": prepared.clean_summary, "classes": labels, "splits": {}}
+    binning_summary = {"enabled": False}
+    if "numeric_binned" in prepared.preprocessor.named_transformers_:
+        discretizer = prepared.preprocessor.named_transformers_[
+            "numeric_binned"
+        ].named_steps["discretizer"]
+        binning_summary = {
+            "enabled": True,
+            "n_bins": int(discretizer.n_bins),
+            "strategy": discretizer.strategy,
+            "fit_scope": "training_only",
+        }
+    split_summary = {
+        "cleaning": prepared.clean_summary,
+        "preprocessing": {"numeric_binning": binning_summary},
+        "classes": labels,
+        "splits": {},
+    }
     for name, encoded in (
         ("train", prepared.train_labels),
         ("validation", prepared.validation_labels),

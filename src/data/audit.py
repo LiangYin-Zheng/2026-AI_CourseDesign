@@ -4,7 +4,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from obesity_risk.schema import DatasetSchema, validate_schema
+from core.schema import DatasetSchema, validate_schema
 
 
 # 将 NumPy 标量转换为可序列化的 Python 值

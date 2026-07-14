@@ -120,6 +120,16 @@ def _validate_training_config(config: dict) -> None:
         raise ValueError("未知类别策略必须为 ignore")
     if not isinstance(preprocessing["scale_numeric"], bool):
         raise ValueError("preprocessing.scale_numeric 必须是布尔值")
+    binning = preprocessing.get("numeric_binning")
+    if not isinstance(binning, dict):
+        raise ValueError("preprocessing.numeric_binning 必须是字典")
+    if not isinstance(binning.get("enabled"), bool):
+        raise ValueError("数值分箱开关必须是布尔值")
+    n_bins = binning.get("n_bins")
+    if isinstance(n_bins, bool) or not isinstance(n_bins, int) or n_bins < 2:
+        raise ValueError("数值分箱数量必须是不小于 2 的整数")
+    if binning.get("strategy") not in {"uniform", "quantile", "kmeans"}:
+        raise ValueError("数值分箱策略必须为 uniform、quantile 或 kmeans")
     for model_name in ("sklearn_logistic", "sklearn_mlp"):
         model_config = config["training"][model_name]
         if not isinstance(model_config.get("candidates"), list) or not model_config["candidates"]:
