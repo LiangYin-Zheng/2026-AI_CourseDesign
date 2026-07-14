@@ -274,8 +274,8 @@
       }
     }
   },
-  "training_time_seconds": 0.41487691598013043,
-  "inference_time_seconds": 0.0002297920873388648,
+  "training_time_seconds": 0.3614944589789957,
+  "inference_time_seconds": 0.00022862502373754978,
   "epochs_trained": 300,
   "class_names": [
     "0rmal_Weight",

@@ -18,7 +18,7 @@
       },
       "validation_macro_f1": 0.8477852300004788,
       "validation_accuracy": 0.8622350674373795,
-      "training_time_seconds": 0.2115496250335127
+      "training_time_seconds": 0.21735333290416747
     },
     {
       "parameters": {
@@ -28,7 +28,7 @@
       },
       "validation_macro_f1": 0.8566191873467722,
       "validation_accuracy": 0.8702633269107257,
-      "training_time_seconds": 0.23766550002619624
+      "training_time_seconds": 0.23328225000295788
     },
     {
       "parameters": {
@@ -38,7 +38,7 @@
       },
       "validation_macro_f1": 0.855787064822951,
       "validation_accuracy": 0.8689788053949904,
-      "training_time_seconds": 0.23988658306188881
+      "training_time_seconds": 0.2363417079905048
     }
   ],
   "validation_metrics": {
@@ -303,8 +303,8 @@
       }
     }
   },
-  "training_time_seconds": 0.23766550002619624,
-  "inference_time_seconds": 0.00598754093516618,
+  "training_time_seconds": 0.23328225000295788,
+  "inference_time_seconds": 0.006087249959819019,
   "class_names": [
     "0rmal_Weight",
     "Insufficient_Weight",
