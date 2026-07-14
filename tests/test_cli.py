@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from obesity_risk.__main__ import main
+from main import main
 
 
 # 验证默认健康检查入口保持可用
@@ -39,6 +39,10 @@ def test_audit_data_generates_reports(monkeypatch, tmp_path: Path, capsys) -> No
             "  categorical_imputation: most_frequent\n"
             "  scale_numeric: true\n"
             "  unknown_category_policy: ignore\n"
+            "  numeric_binning:\n"
+            "    enabled: false\n"
+            "    n_bins: 20\n"
+            "    strategy: quantile\n"
             "training:\n"
             "  sklearn_logistic:\n    max_iter: 20\n    candidates: [{C: 1.0}]\n"
             "  sklearn_mlp:\n    max_iter: 20\n    candidates: [{hidden_layer_sizes: [4]}]\n"
@@ -53,7 +57,7 @@ def test_audit_data_generates_reports(monkeypatch, tmp_path: Path, capsys) -> No
         "  reports_dir: outputs/reports\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr("obesity_risk.workflows.get_project_root", lambda: tmp_path)
+    monkeypatch.setattr("application.workflows.get_project_root", lambda: tmp_path)
     assert main(["audit-data"]) == 0
     output = capsys.readouterr().out
     assert "原始数据保持不变" in output
@@ -62,7 +66,7 @@ def test_audit_data_generates_reports(monkeypatch, tmp_path: Path, capsys) -> No
 
 # 验证 CLI 错误输出不包含 traceback
 def test_cli_error_has_no_traceback(monkeypatch, tmp_path: Path, capsys) -> None:
-    monkeypatch.setattr("obesity_risk.workflows.get_project_root", lambda: tmp_path)
+    monkeypatch.setattr("application.workflows.get_project_root", lambda: tmp_path)
     assert main(["audit-data"]) == 1
     output = capsys.readouterr().out
     assert "Traceback" not in output

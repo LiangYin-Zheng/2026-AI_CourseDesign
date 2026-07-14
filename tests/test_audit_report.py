@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from obesity_risk.audit_report import write_audit_reports
+from evaluation.reports import write_audit_reports
 
 
 # 创建最小报告测试结果

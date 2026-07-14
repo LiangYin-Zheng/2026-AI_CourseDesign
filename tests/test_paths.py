@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from obesity_risk.paths import get_project_paths
+from core.paths import get_project_paths
 
 
 # 创建路径测试使用的最小配置

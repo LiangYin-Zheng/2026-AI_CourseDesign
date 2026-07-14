@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from obesity_risk.config import load_config
-from obesity_risk.paths import get_project_root
-from obesity_risk.schema import DatasetSchema, build_schema, validate_schema
+from core.config import load_config
+from core.paths import get_project_root
+from core.schema import DatasetSchema, build_schema, validate_schema
 
 
 # 创建小型 Schema 测试对象

@@ -1,6 +1,6 @@
 import numpy as np
 
-from obesity_risk.evaluation import evaluate_predictions
+from evaluation import evaluate_predictions
 
 
 # 验证统一评估包含课程要求的宏平均、加权平均和混淆矩阵

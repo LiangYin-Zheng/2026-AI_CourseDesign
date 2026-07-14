@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from obesity_risk.config import load_config
+from core.config import load_config
 
 
 VALID_CONFIG = (
@@ -37,6 +37,10 @@ VALID_CONFIG = (
     "  categorical_imputation: most_frequent\n"
     "  scale_numeric: true\n"
     "  unknown_category_policy: ignore\n"
+    "  numeric_binning:\n"
+    "    enabled: true\n"
+    "    n_bins: 20\n"
+    "    strategy: quantile\n"
     "training:\n"
     "  sklearn_logistic:\n    max_iter: 20\n    candidates: [{C: 1.0}]\n"
     "  sklearn_mlp:\n    max_iter: 20\n    candidates: [{hidden_layer_sizes: [4]}]\n"
@@ -129,4 +133,11 @@ def test_schema_columns_must_be_unique(tmp_path: Path) -> None:
 def test_iqr_exempt_columns_must_be_numeric(tmp_path: Path) -> None:
     content = VALID_CONFIG.replace("  iqr_exempt_columns: [NCP]", "  iqr_exempt_columns: [Gender]")
     with pytest.raises(ValueError, match="IQR 豁免字段必须属于数值字段"):
+        load_config(write_config(tmp_path, content))
+
+
+# 验证数值分箱数量必须至少为 2
+def test_numeric_binning_count_must_be_valid(tmp_path: Path) -> None:
+    content = VALID_CONFIG.replace("    n_bins: 20", "    n_bins: 1")
+    with pytest.raises(ValueError, match="分箱数量"):
         load_config(write_config(tmp_path, content))

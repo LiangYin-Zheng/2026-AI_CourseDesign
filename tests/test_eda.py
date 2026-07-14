@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from obesity_risk.eda import run_eda
-from obesity_risk.schema import DatasetSchema
+from data.eda import run_eda
+from core.schema import DatasetSchema
 
 
 # 验证小型数据可以生成完整 EDA 报告和六张非空图片

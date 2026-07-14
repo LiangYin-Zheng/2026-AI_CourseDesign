@@ -3,8 +3,8 @@ import json
 import numpy as np
 import pandas as pd
 
-from obesity_risk.data_audit import audit_dataframe
-from obesity_risk.schema import DatasetSchema
+from data.audit import audit_dataframe
+from core.schema import DatasetSchema
 
 
 # 创建小型审查 Schema 测试对象

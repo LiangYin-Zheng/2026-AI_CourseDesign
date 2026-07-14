@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from obesity_risk.data_loader import DataLoadError, load_csv_readonly, snapshot_file
+from data.loader import DataLoadError, load_csv_readonly, snapshot_file
 
 
 # 创建临时 CSV 测试文件

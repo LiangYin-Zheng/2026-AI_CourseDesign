@@ -1,11 +1,16 @@
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from obesity_risk.config import load_config
-from obesity_risk.preparation import build_preprocessor, prepare_dataframe
-from obesity_risk.schema import DatasetSchema
+from core.config import load_config
+from data.preparation import (
+    build_preprocessor,
+    prepare_dataframe,
+    save_prepared_artifacts,
+)
+from core.schema import DatasetSchema
 
 
 # 创建包含数值缺失和三类目标的小型数据
@@ -88,3 +93,18 @@ def test_preprocessor_handles_missing_and_unknown_category() -> None:
     assert np.isfinite(transformed).all()
     assert np.isfinite(unknown).all()
     assert unknown.shape[1] == transformed.shape[1]
+    assert "numeric_binned" in preprocessor.named_transformers_
+    assert transformed.shape[1] > 5
+
+
+# 验证准备产物记录训练集数值分箱参数
+def test_saved_preprocessing_summary_records_binning(tmp_path: Path) -> None:
+    prepared = prepare_dataframe(make_frame(), make_schema(), default_config())
+    paths = save_prepared_artifacts(prepared, tmp_path)
+    summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+    assert summary["preprocessing"]["numeric_binning"] == {
+        "enabled": True,
+        "n_bins": 20,
+        "strategy": "quantile",
+        "fit_scope": "training_only",
+    }

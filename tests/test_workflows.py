@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from obesity_risk.workflows import MODEL_NAMES, build_model_comparison
+from application.workflows import MODEL_NAMES, build_model_comparison
 
 
 def make_paths(tmp_path: Path) -> dict[str, Path]:
