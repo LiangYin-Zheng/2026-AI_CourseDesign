@@ -2,7 +2,7 @@
   "model_name": "sklearn_mlp",
   "path": "best_model.joblib",
   "selection_metric": "validation_macro_f1",
-  "validation_macro_f1": 0.8796390278159943,
+  "validation_macro_f1": 0.889689521639349,
   "tie_breakers": [
     "validation_accuracy",
     "training_time_seconds",
