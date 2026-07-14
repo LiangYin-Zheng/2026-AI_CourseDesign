@@ -1,6 +1,6 @@
 # 最终交付物清单
 
-复选框仅在存在可验证产物后勾选。阶段一文档和阶段二最小工程已按实际结果标记，不把后续计划写成完成。
+复选框仅在存在可验证产物后勾选。当前阶段三、阶段四的非 UI 核心实现已有真实产物和测试证据；阶段五及课程过程材料仍按实际状态保留未完成。
 
 ## 阶段一：需求与规划
 
@@ -25,9 +25,9 @@
 ## 阶段二：工程基础
 
 - [x] `config/default.yaml`
-- [x] `src/obesity_risk/__init__.py` 与 `src/obesity_risk/__main__.py`
-- [x] `src/obesity_risk/config.py` 配置读取与基础校验
-- [x] `src/obesity_risk/paths.py` 路径管理及原始数据保护
+- [x] `src/main.py` CLI 入口与健康检查
+- [x] `src/core/config.py` 配置读取与基础校验
+- [x] `src/core/paths.py` 路径管理及原始数据保护
 - [x] `tests/test_config.py`
 - [x] `tests/test_paths.py`
 - [x] `pyproject.toml` Python 3.10 依赖与 pytest 配置
@@ -97,7 +97,7 @@
 ## 最终复现与版本控制
 
 - [x] 原始 CSV 最终哈希与基线一致
-- [x] 全套 pytest 在项目 Python 3.10 环境通过
+- [x] 全套 pytest 在项目 Python 3.10 环境通过（85 passed、11 warnings）
 - [x] 非 UI 输出可按 README 的 `run-all` 覆盖复现
 - [x] 依赖版本与运行环境记录
 - [ ] 所有阶段验收证据归档

@@ -6,26 +6,14 @@
 config/
 └── default.yaml
 src/
-└── obesity_risk/
-    ├── __init__.py
-    ├── __main__.py
-    ├── audit_report.py
-    ├── config.py
-    ├── data_audit.py
-    ├── data_loader.py
-    ├── eda.py
-    ├── evaluation.py
-    ├── io_utils.py
-    ├── manual_models.py
-    ├── paths.py
-    ├── predictor.py
-    ├── preparation.py
-    ├── training.py
-    ├── workflows.py
-    └── schema.py
+├── main.py
+├── application/workflows.py
+├── core/{config.py, io.py, paths.py, schema.py}
+├── data/{loader.py, audit.py, preparation.py, eda.py}
+├── evaluation/{metrics.py, reports.py}
+└── model/{sklearn_models.py, manual_logistic.py, manual_mlp.py,
+           numerics.py, training.py, predictor.py}
 tests/
-├── test_config.py
-├── test_paths.py
 └── test_*.py
 ```
 
@@ -33,29 +21,29 @@ tests/
 
 ## 后续阶段规划结构
 
-核心包保持扁平结构，避免为当前规模建立过深目录。阶段五只新增实际 UI 所需模块，并直接消费 `predictor.py` 与现有输出，不复制训练逻辑。
+当前代码按 `application`、`core`、`data`、`evaluation`、`model` 分层。阶段五只新增实际 UI 所需模块，并直接消费 `src/model/predictor.py` 与现有输出，不复制训练逻辑。
 
 ## 模块清单
 
 | 模块 | 阶段/状态 | 职责 | 建议文件 | 测试重点 |
 |---|---|---|---|---|
-| 配置 | 阶段二已实现 | 读取并校验当前 YAML 配置 | `config.py` | 缺项、类型、比例和关键值 |
-| 路径 | 阶段二已实现 | 固定根目录解析、路径防逃逸和原始数据保护 | `paths.py` | 越界、覆盖、目录冲突、文件缺失 |
-| CLI 入口 | 阶段四已实现 | 调用七个非 UI 工作流命令 | `__main__.py` | 命令 smoke 与错误退出码 |
-| 数据读取/质量 | 阶段三第一步已实现 | 只读加载 CSV、Schema 与质量检查、结构化报告 | `data_loader.py`、`schema.py`、`data_audit.py`、`audit_report.py` | 缺文件、格式错误、输入不变、统计和序列化 |
-| 数据划分/预处理 | 阶段三已实现 | 固定分层三分和训练集拟合预处理 | `preparation.py` | 互斥、复现、无泄漏 |
-| EDA/模型/评估/产物 | 阶段三至四已实现 | 分析、四模型训练、统一评估和产物保存 | `eda.py`、`training.py`、`manual_models.py`、`evaluation.py`、`workflows.py` | 指标、接口、可复现和公平比较 |
-| 预测服务 | 阶段四已实现 | 重载最佳模型并提供单条/批量结构化预测 | `predictor.py` | schema、概率、错误提示、免责声明 |
-| 应用服务/交互页面 | 阶段五规划 | 五页面展示、训练、预测和比较 | `app/` | 输入校验、状态、结果和免责声明 |
+| 配置 | 阶段二已实现 | 读取并校验当前 YAML 配置 | `src/core/config.py` | 缺项、类型、比例和关键值 |
+| 路径 | 阶段二已实现 | 固定根目录解析、路径防逃逸和原始数据保护 | `src/core/paths.py` | 越界、覆盖、目录冲突、文件缺失 |
+| CLI 入口 | 阶段三至四已实现 | 调用七个非 UI 工作流命令 | `src/main.py` | `tests/test_cli.py`、命令错误退出码 |
+| 数据读取/质量 | 阶段三已实现 | 只读加载 CSV、Schema 与质量检查、结构化报告 | `src/data/loader.py`、`src/core/schema.py`、`src/data/audit.py`、`src/evaluation/reports.py` | 缺文件、格式错误、输入不变、统计和序列化 |
+| 数据划分/预处理 | 阶段三已实现 | 固定分层三分和训练集拟合预处理 | `src/data/preparation.py` | 互斥、复现、无泄漏 |
+| EDA/模型/评估/产物 | 阶段三至四已实现 | 分析、四模型训练、统一评估和产物保存 | `src/data/eda.py`、`src/model/training.py`、`src/model/manual_*`、`src/evaluation/metrics.py`、`src/application/workflows.py` | 指标、接口、可复现和公平比较 |
+| 预测服务 | 阶段四已实现 | 重载模型并提供单条/批量结构化预测 | `src/model/predictor.py` | schema、概率、错误提示、免责声明 |
+| 应用服务/交互页面 | 阶段五未实现 | 五页面展示、训练、预测和比较 | UI 模块尚未创建 | 输入校验、状态、结果和免责声明 |
 
 ## 调用关系
 
 ```mermaid
 flowchart LR
-    ENTRY["简单入口"] --> CFG["配置/路径"]
-    UI["交互页面"] --> SVC["应用服务"]
+    ENTRY["src/main.py"] --> CFG["配置/路径"]
+    UI["交互页面（待实现）"] --> SVC["应用服务（待实现）"]
     SVC --> CFG
-    FUTURE["后续业务入口"] --> DATA["数据读取/质量/划分/预处理"]
+    ENTRY --> DATA["数据读取/质量/划分/预处理"]
     SVC --> DATA
     DATA --> EDA["EDA"]
     DATA --> SK["sklearn 模型"]
@@ -75,14 +63,16 @@ flowchart LR
 
 ## 输出规划
 
-- `outputs/figures/<run_id>/`：PNG/SVG 图表与图表说明索引。
-- `outputs/metrics/<run_id>/`：JSON 指标、CSV 对比、分类报告、运行元数据。
-- `outputs/models/<run_id>/`：模型、预处理器、标签映射、输入 schema、清单和校验信息。
-- 进入阶段三实验运行后，根据实际记录需求决定日志的保存方式和目录。
+- `outputs/eda/figures/`：PNG 图表，当前包含六类 EDA 图。
+- `outputs/metrics/`：JSON 指标、CSV 对比、分类报告、混淆矩阵和手写模型训练曲线。
+- `outputs/models/`：四类模型、最佳模型 bundle 和部署选择元数据。
+- `data/processed/`：划分索引、预处理器、输入字段元数据和清洗摘要。
+- 日志保存方式尚未实现，不能把实验产物目录当作日志目录。
 - 自动产物默认不与源代码提交混合；报告选用的稳定图表按交付策略另行纳入。
 
 ## 测试规划
 
-- 当前测试为 `tests/test_config.py` 和 `tests/test_paths.py`。
-- 阶段三及以后可按实际规模增加数据、模型、集成和界面测试；不提前建立空目录。
-- 测试命令统一为 `python -m pytest`。
+- 当前测试覆盖配置、路径、数据、EDA、预处理、评估、四类模型、预测器、CLI 和工作流，共 85 项。
+- 最近一次指定环境测试结果为 85 passed、0 failed、0 skipped、11 warnings。
+- 测试命令统一为 `conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src pytest -q`。
+- UI 集成测试尚未建立。
