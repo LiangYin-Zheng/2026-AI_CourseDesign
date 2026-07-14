@@ -1,12 +1,12 @@
 # 肥胖风险预测系统设计
 
-本项目肥胖风险预测系统设计，是基于仓库内 `data/obesity_level.csv` 完成可复现的肥胖等级多分类流程。当前已完成除交互式 UI、正式 Word 报告、实习日志和周汇报 PPT 外的全部核心开发；预测仅用于课程演示，不构成医学诊断或健康建议。
+本项目肥胖风险预测系统设计，是基于仓库内 `data/obesity_level.csv` 完成可复现的肥胖等级多分类流程。当前已完成数据处理、EDA、sklearn 模型、NumPy 手写模型、统一评估和核心预测接口；交互式 UI、正式 Word 报告、实习日志和周汇报 PPT 尚未完成。预测仅用于课程演示，不构成医学诊断或健康建议。
 
 ## 环境与依赖
 
 - macOS / Apple Silicon；
-- 使用项目指定的 Python 3.10 Conda 环境（本机路径通过 `OBESITY_ENV` 传入）；
-- Python 3.10；
+- 使用项目指定的 Python 3.10 Conda 环境：`/Users/liang/dev/envs/workspace`；
+- Python 3.10.20；
 - NumPy、pandas、scikit-learn、Matplotlib、PyYAML、joblib、pytest。
 
 ## 输出目录
@@ -21,6 +21,28 @@ outputs/reports/                非 UI 核心实验总结
 ```
 
 完整真实结果见 `outputs/metrics/model_comparison.csv` 和 `outputs/reports/experiment_summary.md`。当前共享预处理在保留标准化连续值的同时，增加仅由训练集拟合的 20 箱 quantile 数值分箱独热特征。部署模型为 `sklearn_mlp`，由验证集 macro F1（0.889690）选出；其测试集 Accuracy 为 0.882787，macro F1 为 0.869258。测试集 macro F1 排名仅用于最终展示，不参与部署选择。
+
+## 当前实现状态
+
+- 原始数据审查结果：20758 行、18 列、7 个目标类别，缺失单元格和完全重复行均为 0。
+- 四类模型均已训练并保存：sklearn 逻辑回归、sklearn MLP、NumPy 手写逻辑回归、NumPy 手写神经网络。
+- 统一测试命令为 `conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src pytest -q`；最近一次结果为 85 passed、0 failed、0 skipped、11 warnings。
+- 核心预测入口为 `model.predictor.load_predictor()`、`Predictor.predict_single()` 和 `Predictor.predict_batch()`；模型加载和输入校验已实现，但尚无独立预测 CLI。
+- 仍待完成：UI 五页面、中文目标类别展示映射、字段含义/单位确认、日志、周报 PPT 和正式课程报告。
+
+## 非 UI 命令
+
+```bash
+conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src python src/main.py audit-data
+conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src python src/main.py prepare-data
+conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src python src/main.py run-eda
+conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src python src/main.py train-sklearn
+conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src python src/main.py train-manual
+conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src python src/main.py evaluate
+conda run -p /Users/liang/dev/envs/workspace env PYTHONPATH=src python src/main.py run-all
+```
+
+训练命令会更新处理数据、模型和评估输出；预测页面应只加载已有模型，不应在每次请求中调用训练命令。
 
 ## Git 提交规范
 
