@@ -1,3 +1,15 @@
+# Ignore Mac system files
 .DS_Store
+docs/人工智能综合实践报告模板.doc
+docs/人工智能综合实践日记模板.doc
+docs/superpowers/
 
+# Ignore Markdown files
+AGENTS.md
+
+# Ignore Visual Studio Code settings
 .vscode/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
