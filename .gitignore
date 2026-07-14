@@ -22,3 +22,6 @@ htmlcov/
 data/processed/
 outputs/models/*.joblib
 outputs/models/*.npz
+
+# Ignore ui processing artifacts
+outputs/ui_screenshots/
