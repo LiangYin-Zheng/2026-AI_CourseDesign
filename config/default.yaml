@@ -1,0 +1,15 @@
+data:
+  raw_path: data/obesity_level.csv
+  target: 0be1dad
+  exclude_columns:
+    - id
+
+split:
+  train: 0.70
+  validation: 0.15
+  test: 0.15
+  random_seed: 42
+
+paths:
+  processed_dir: data/processed
+  output_dir: outputs
