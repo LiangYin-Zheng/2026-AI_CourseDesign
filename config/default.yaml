@@ -55,6 +55,10 @@ preprocessing:
   categorical_imputation: most_frequent
   scale_numeric: true
   unknown_category_policy: ignore
+  numeric_binning:
+    enabled: true
+    n_bins: 20
+    strategy: quantile
 
 training:
   sklearn_logistic:
@@ -68,10 +72,26 @@ training:
     early_stopping: true
     validation_fraction: 0.12
     candidates:
-      - {hidden_layer_sizes: [48], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
-      - {hidden_layer_sizes: [64, 32], activation: relu, alpha: 0.001, learning_rate_init: 0.001}
       - {hidden_layer_sizes: [64, 32], activation: tanh, alpha: 0.0001, learning_rate_init: 0.001}
       - {hidden_layer_sizes: [64, 32], activation: tanh, alpha: 0.001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [48], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [64, 32], activation: relu, alpha: 0.001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [96], activation: tanh, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [96], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [96, 48], activation: tanh, alpha: 0.0001, learning_rate_init: 0.0005}
+      - {hidden_layer_sizes: [96, 48], activation: tanh, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [96, 48], activation: tanh, alpha: 0.0001, learning_rate_init: 0.002}
+      - {hidden_layer_sizes: [96, 48], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [96, 48], activation: relu, alpha: 0.001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [128, 64], activation: tanh, alpha: 0.0001, learning_rate_init: 0.0005}
+      - {hidden_layer_sizes: [128, 64], activation: tanh, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [128, 64], activation: tanh, alpha: 0.001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [128, 64], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [128, 64], activation: relu, alpha: 0.001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [96, 48, 24], activation: tanh, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [96, 48, 24], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [128, 64, 32], activation: tanh, alpha: 0.0001, learning_rate_init: 0.001}
+      - {hidden_layer_sizes: [128, 64, 32], activation: relu, alpha: 0.0001, learning_rate_init: 0.001}
   manual_logistic:
     learning_rate: 0.08
     l2: 0.0005

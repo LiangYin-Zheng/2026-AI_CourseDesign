@@ -20,7 +20,7 @@ outputs/metrics/                单模型指标/报告/矩阵/损失与四模型
 outputs/reports/                非 UI 核心实验总结
 ```
 
-完整真实结果见 `outputs/metrics/model_comparison.csv` 和 `outputs/reports/experiment_summary.md`。当前部署模型为 `sklearn_mlp`，由验证集 macro F1（0.874530）选出；其测试集 Accuracy 为 0.868979，macro F1 为 0.854291。当前测试集 macro F1 排名第一同为 `sklearn_mlp`，但测试排名不参与部署选择。
+完整真实结果见 `outputs/metrics/model_comparison.csv` 和 `outputs/reports/experiment_summary.md`。当前共享预处理在保留标准化连续值的同时，增加仅由训练集拟合的 20 箱 quantile 数值分箱独热特征。部署模型为 `sklearn_mlp`，由验证集 macro F1（0.889690）选出；其测试集 Accuracy 为 0.882787，macro F1 为 0.869258。测试集 macro F1 排名仅用于最终展示，不参与部署选择。
 
 ## Git 提交规范
 
