@@ -1,7 +1,7 @@
 import streamlit as st
 
 from application.workflows import load_workflow_context
-from ui.constants import MODEL_INFO, NAV_ITEMS
+from ui.constants import MODEL_INFO, NAV_ITEMS, NAV_LABELS
 from ui.pages import PAGE_RENDERERS
 from ui.services import read_json
 from ui.styles import APP_CSS
@@ -27,6 +27,7 @@ def run_app() -> None:
             "页面导航",
             options=NAV_ITEMS,
             key="navigation",
+            format_func=lambda value: NAV_LABELS[value],
             label_visibility="collapsed",
         )
         try:
@@ -35,12 +36,15 @@ def run_app() -> None:
             model_label = MODEL_INFO[active]["name"]
             system_status = "运行正常"
         except (FileNotFoundError, OSError, ValueError, KeyError):
+            active = ""
             model_label = "尚未加载"
             system_status = "等待模型产物"
         st.markdown(
             '<div class="sidebar-footer"><div class="label">当前活动模型</div>'
-            f'<div class="value">{model_label}</div><div class="label">系统状态</div>'
-            f'<div class="value">● {system_status}</div>'
+            f'<div class="model-row"><div class="model-name" title="{model_label}">{model_label}</div>'
+            f'<span class="badge">{MODEL_INFO.get(active, {}).get("implementation", "模型")}</span></div>'
+            '<div class="label">系统状态</div>'
+            f'<div class="status-row"><span class="status-dot"></span>{system_status}</div>'
             '<div class="legal">仅用于课程演示，不构成医学诊断、健康评估或治疗建议。</div></div>',
             unsafe_allow_html=True,
         )

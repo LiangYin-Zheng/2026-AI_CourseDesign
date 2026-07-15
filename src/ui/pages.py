@@ -1,7 +1,9 @@
+import json
 from datetime import datetime
-from time import sleep
+from time import perf_counter, sleep
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 from application.workflows import load_workflow_context
@@ -9,6 +11,7 @@ from ui.components import (
     disclaimer,
     empty_state,
     metric_card,
+    parameter_summary_frame,
     page_header,
     section_header,
     show_error,
@@ -44,13 +47,58 @@ def _navigate(page_name: str) -> None:
 
 
 # 绘制统一主色的模型指标对比图。
-def _comparison_chart(results: list[dict], metric: str, label: str) -> None:
-    rows = {
-        result["display_name"]: float(result["test_metrics"][metric])
-        for result in results
-    }
-    data = pd.DataFrame({label: rows}).sort_values(label, ascending=False)
-    st.bar_chart(data, color="#3A7CA5", horizontal=True, height=280)
+def _comparison_chart(
+    results: list[dict], metric: str, label: str, selected_model: str
+) -> None:
+    rows = []
+    for result in results:
+        value = (
+            float(result["training_time_seconds"])
+            if metric == "training_time_seconds"
+            else float(result["test_metrics"][metric])
+        )
+        rows.append(
+            {
+                "model_name": result["model_name"],
+                "display_name": result["display_name"],
+                "value": value,
+            }
+        )
+    rows.sort(key=lambda item: item["value"])
+    is_time = metric == "training_time_seconds"
+    text = [
+        f"{row['value']:.3f} 秒" if is_time else f"{row['value'] * 100:.2f}%"
+        for row in rows
+    ]
+    colors = [
+        "#2563EB" if row["model_name"] == selected_model else "#B8CAE6"
+        for row in rows
+    ]
+    figure = go.Figure(
+        go.Bar(
+            x=[row["value"] for row in rows],
+            y=[row["display_name"] for row in rows],
+            orientation="h",
+            marker={"color": colors, "line": {"width": 0}},
+            text=text,
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate="%{y}<br>%{text}<extra></extra>",
+        )
+    )
+    upper = max(row["value"] for row in rows) * 1.16
+    figure.update_layout(
+        height=292,
+        margin={"l": 8, "r": 70, "t": 12, "b": 20},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={"family": "-apple-system, BlinkMacSystemFont, PingFang SC, sans-serif", "color": "#64748B", "size": 12},
+        showlegend=False,
+        xaxis={"range": [0, upper], "showgrid": True, "gridcolor": "#EEF2F7", "zeroline": False, "showticklabels": False, "title": None},
+        yaxis={"showgrid": False, "automargin": True, "tickfont": {"color": "#334155", "size": 12}},
+        bargap=0.38,
+    )
+    st.plotly_chart(figure, width="stretch", config={"displayModeBar": False})
 
 
 # 展示系统概览首页。
@@ -67,62 +115,72 @@ def render_overview() -> None:
     test_metrics = active_metrics["test_metrics"]
     validation_metrics = active_metrics["validation_metrics"]
 
-    st.markdown(
-        '<div class="hero"><span class="status-pill"><span class="status-dot"></span>系统运行正常</span>'
-        '<h2>肥胖风险预测系统</h2>'
-        '<p>基于真实课程数据完成七分类预测、四模型对比、探索性分析与可控模型训练。'
-        '结果面向算法课程演示，不用于医学判断。</p></div>',
-        unsafe_allow_html=True,
-    )
+    with st.container(border=True, key="overview_banner"):
+        banner_left, banner_right = st.columns([1.55, 0.45], gap="large")
+        with banner_left:
+            st.markdown(
+                '<span class="status-pill"><span class="status-dot"></span>系统运行正常</span>'
+                '<h2 style="font-size:1.55rem;margin:.8rem 0 .45rem">肥胖风险预测系统</h2>'
+                '<p style="color:#64748B;font-size:.86rem;line-height:1.65;margin:0">'
+                '基于真实课程数据完成七分类预测、四模型对比、探索性分析与可控模型训练。'
+                '结果面向算法课程演示，不用于医学判断。</p>',
+                unsafe_allow_html=True,
+            )
+        with banner_right:
+            st.markdown(
+                f'<div class="metric-label">当前活动模型</div>'
+                f'<div class="banner-model">{active_info["name"]}</div>'
+                f'<span class="badge">{active_info["implementation"]}</span>'
+                f'<div class="banner-time" style="margin-top:.65rem">更新于 {_format_time(dashboard["model_updated_at"])}</div>',
+                unsafe_allow_html=True,
+            )
+            st.button(
+                "开始预测",
+                type="primary",
+                width="stretch",
+                key="overview_predict",
+                on_click=_navigate,
+                args=("肥胖风险预测",),
+            )
 
-    columns = st.columns(6)
+    section_header("数据与模型概览", "核心规模和当前活动模型。")
+    columns = st.columns(4)
     cards = (
         ("数据样本", f"{dashboard['sample_count']:,}", "真实 CSV 记录数"),
         ("输入特征", str(dashboard["feature_count"]), "排除标识与目标字段"),
         ("肥胖等级", str(dashboard["class_count"]), "当前目标类别数"),
-        ("活动模型", active_info["kind"], active_info["implementation"]),
-        ("测试集 Accuracy", _percent(test_metrics["accuracy"]), "仅用于最终评价"),
-        ("测试集 Macro F1", _percent(test_metrics["macro_f1"]), "兼顾七个类别"),
+        ("当前活动模型", active_info["name"], active_info["implementation"]),
     )
-    for column, card in zip(columns, cards):
+    for index, (column, card) in enumerate(zip(columns, cards)):
         with column:
-            metric_card(*card)
+            metric_card(*card, model_value=index == 3)
 
-    section_header("当前模型摘要", "活动模型由现有评估产物加载，不会在打开页面时自动训练。")
-    left, right = st.columns([1.45, 1])
+    score_columns = st.columns(3)
+    scores = (
+        ("验证集 Macro F1", _percent(validation_metrics["macro_f1"]), "活动模型选择依据"),
+        ("测试集 Accuracy", _percent(test_metrics["accuracy"]), "仅用于最终评价"),
+        ("测试集 Macro F1", _percent(test_metrics["macro_f1"]), "七类别等权平均"),
+    )
+    for column, score in zip(score_columns, scores):
+        with column:
+            metric_card(*score)
+
+    section_header("当前模型摘要与排名", "摘要不重复核心指标；右侧按测试集 Macro F1 展示排名。")
+    left, right = st.columns([0.8, 1.2], gap="large")
     with left:
         st.markdown(
             '<div class="card">'
-            f'<div class="metric-label">当前活动模型</div><h3 style="margin:.35rem 0">{active_info["name"]}</h3>'
-            f'<div style="color:#667085;font-size:.85rem;line-height:1.8">实现方式：{active_info["implementation"]}<br>'
-            f'模型类型：{active_info["kind"]}<br>更新时间：{_format_time(dashboard["model_updated_at"])}</div></div>',
+            f'<div class="metric-label">模型信息</div><h3 style="margin:.45rem 0 .3rem">{active_info["name"]}</h3>'
+            f'<span class="badge">{active_info["implementation"]}</span>'
+            f'<div style="color:#64748B;font-size:.78rem;line-height:1.8;margin-top:.8rem">'
+            f'模型类型：{active_info["kind"]}<br>'
+            f'更新时间：{_format_time(dashboard["model_updated_at"])}<br>'
+            f'参数数量：{len(active_metrics["parameters"])} 项</div></div>',
             unsafe_allow_html=True,
         )
     with right:
-        summary_columns = st.columns(2)
-        with summary_columns[0]:
-            metric_card("验证集 Macro F1", _percent(validation_metrics["macro_f1"]), "部署选择依据")
-        with summary_columns[1]:
-            metric_card("测试集 Weighted F1", _percent(test_metrics["weighted_f1"]), "按类别样本量加权")
-
-    section_header("四模型重点对比", "首页只展示测试集重点指标；部署选择仍严格依据验证集 Macro F1。")
-    chart_column, table_column = st.columns([1.05, 1.45])
-    with chart_column:
-        _comparison_chart(dashboard["comparison"], "macro_f1", "Macro F1")
-    with table_column:
-        rows = []
-        for result in dashboard["comparison"]:
-            metrics = result["test_metrics"]
-            rows.append(
-                {
-                    "模型": result["display_name"],
-                    "Accuracy": _percent(metrics["accuracy"]),
-                    "Macro F1": _percent(metrics["macro_f1"]),
-                    "训练时间（秒）": f"{result['training_time_seconds']:.3f}",
-                    "活动": "是" if result["model_name"] == active_name else "否",
-                }
-            )
-        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", height=245)
+        with st.container(border=True, key="overview_rank_chart"):
+            _comparison_chart(dashboard["comparison"], "macro_f1", "Macro F1", active_name)
 
     section_header("快捷入口", "从常用任务直接进入对应页面。")
     quick_columns = st.columns(4)
@@ -159,19 +217,40 @@ def _initialize_prediction_inputs() -> None:
 # 渲染一个带真实范围或真实类别选项的输入控件。
 def _render_input(field: str, metadata: dict) -> object:
     info = FIELD_INFO[field]
-    label = f"{info['label']} · {field}"
+    label = info["label"]
     help_text = info.get("help", info.get("unit", "来自活动模型输入元数据"))
+    help_text = f"原始字段：{field}；{help_text}"
     if field in metadata["numeric_columns"]:
         bounds = metadata["numeric_ranges"][field]
+        common_options = {
+            "label": label,
+            "min_value": float(bounds["minimum"]),
+            "max_value": float(bounds["maximum"]),
+            "step": float(info.get("step", 0.1)),
+            "key": f"input_{field}",
+            "help": f"{help_text}；活动模型允许范围 {bounds['minimum']}–{bounds['maximum']}",
+        }
+        if field in {"FCVC", "NCP", "CH2O", "FAF", "TUE"}:
+            return st.slider(**common_options)
         return st.number_input(
-            label,
-            min_value=float(bounds["minimum"]),
-            max_value=float(bounds["maximum"]),
-            step=float(info.get("step", 0.1)),
-            key=f"input_{field}",
-            help=f"{help_text}；活动模型允许范围 {bounds['minimum']}–{bounds['maximum']}",
+            **common_options,
         )
     options = metadata["categorical_options"][field]
+    if len(options) == 2:
+        compact_labels = {
+            "Female": "女性候选",
+            "Male": "男性候选",
+            0: "0",
+            1: "1",
+        }
+        return st.segmented_control(
+            label,
+            options=options,
+            key=f"input_{field}",
+            format_func=lambda value: compact_labels.get(value, str(value)),
+            help=help_text,
+            width="stretch",
+        )
     return st.selectbox(
         label,
         options=options,
@@ -187,6 +266,35 @@ def _collect_prediction_sample(metadata: dict) -> dict:
         field: st.session_state[f"input_{field}"]
         for field in metadata["input_columns"]
     }
+
+
+# 绘制中文标签完整且带末端数值的七类别概率图。
+def _probability_chart(probability_rows: list[dict]) -> None:
+    rows = list(reversed(probability_rows))
+    figure = go.Figure(
+        go.Bar(
+            x=[row["预测概率"] for row in rows],
+            y=[row["类别"] for row in rows],
+            orientation="h",
+            marker={"color": ["#2563EB" if index == len(rows) - 1 else "#B8CAE6" for index in range(len(rows))]},
+            text=[_percent(row["预测概率"]) for row in rows],
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate="%{y}<br>%{text}<extra></extra>",
+        )
+    )
+    figure.update_layout(
+        height=350,
+        margin={"l": 8, "r": 68, "t": 10, "b": 18},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={"family": "-apple-system, BlinkMacSystemFont, PingFang SC, sans-serif", "color": "#64748B", "size": 11},
+        xaxis={"range": [0, max(row["预测概率"] for row in rows) * 1.2], "showticklabels": False, "showgrid": True, "gridcolor": "#EEF2F7", "zeroline": False},
+        yaxis={"showgrid": False, "automargin": True},
+        showlegend=False,
+        bargap=0.38,
+    )
+    st.plotly_chart(figure, width="stretch", config={"displayModeBar": False})
 
 
 # 展示预测结果、模型信息与排序后的七类概率。
@@ -218,8 +326,7 @@ def _render_prediction_result(result: dict) -> None:
             result["probabilities"].items(), key=lambda item: item[1], reverse=True
         )
     ]
-    chart_data = pd.DataFrame(probability_rows).set_index("类别")[["预测概率"]]
-    st.bar_chart(chart_data, color="#3A7CA5", horizontal=True, height=320)
+    _probability_chart(probability_rows)
     display_rows = pd.DataFrame(probability_rows)
     display_rows["预测概率"] = display_rows["预测概率"].map(_percent)
     st.dataframe(display_rows, hide_index=True, width="stretch")
@@ -238,13 +345,13 @@ def render_prediction() -> None:
     input_column, result_column = st.columns([1.08, 0.92], gap="large")
     with input_column:
         section_header("输入样本", "字段范围和选项直接取自活动模型；候选中文含义尚待正式数据说明确认。")
-        action_columns = st.columns(2)
+        action_columns = st.columns([0.72, 0.28])
         with action_columns[0]:
-            if st.button("加载示例", width="stretch"):
+            if st.button("加载示例", width="content", key="load_prediction_example"):
                 _set_prediction_sample(load_example_sample(1))
                 st.rerun()
         with action_columns[1]:
-            if st.button("重置输入", width="stretch"):
+            if st.button("重置输入", type="tertiary", width="content", key="reset_prediction"):
                 _reset_prediction_inputs()
                 st.rerun()
         with st.form("prediction_form", border=False):
@@ -269,7 +376,15 @@ def render_prediction() -> None:
         section_header("预测结果", "查看最高类别、模型信息和完整概率分布。")
         result = st.session_state.get("prediction_result")
         if result is None:
-            empty_state("等待预测", "填写左侧信息并点击“开始预测”。")
+            empty_state(
+                "等待预测",
+                "填写左侧信息并点击“开始预测”。",
+                (
+                    "使用当前活动模型，不触发重新训练",
+                    "返回七个课程类别的完整概率",
+                    "输入仅用于本次页面预测",
+                ),
+            )
             disclaimer()
         else:
             _render_prediction_result(result)
@@ -332,14 +447,17 @@ def render_performance() -> None:
         "Macro F1": ("macro_f1", "Macro F1"),
         "Weighted F1": ("weighted_f1", "Weighted F1"),
     }
-    if metric_label == "训练时间":
-        times = pd.DataFrame(
-            {"训练时间（秒）": {item["display_name"]: item["training_time_seconds"] for item in all_metrics}}
-        ).sort_values("训练时间（秒）")
-        st.bar_chart(times, color="#3A7CA5", horizontal=True, height=300)
-    else:
-        metric_key, chart_label = metric_map[metric_label or "Macro F1"]
-        _comparison_chart(all_metrics, metric_key, chart_label)
+    with st.container(border=True, key="performance_chart"):
+        if metric_label == "训练时间":
+            _comparison_chart(
+                all_metrics,
+                "training_time_seconds",
+                "训练时间（秒）",
+                model_name,
+            )
+        else:
+            metric_key, chart_label = metric_map[metric_label or "Macro F1"]
+            _comparison_chart(all_metrics, metric_key, chart_label, model_name)
 
     section_header("详细结果", "通过选项卡切换内容，避免连续图像和大段原始文本。")
     confusion_tab, report_tab, curve_tab, parameters_tab = st.tabs(
@@ -367,7 +485,11 @@ def render_performance() -> None:
             empty_state("没有逐轮训练曲线", "该 sklearn 模型未保存逐轮训练曲线。")
     with parameters_tab:
         st.markdown("**最佳或当前保存参数**")
-        st.json(metrics["parameters"], expanded=True)
+        st.dataframe(
+            parameter_summary_frame(metrics["display_name"], metrics["parameters"]),
+            hide_index=True,
+            width="stretch",
+        )
         st.caption(metrics["selection_reason"])
 
     st.info("部署模型依据验证集 Macro F1 选择；测试集只用于最终评价。模型比较不能只看 Accuracy，手写模型主要用于展示核心算法实现过程。")
@@ -422,10 +544,27 @@ def render_eda() -> None:
         },
     }
     section_header("图表浏览器", "每次聚焦一张主图，便于课堂讲解和报告截图。")
+    category = st.pills(
+        "分析类别",
+        options=list(figures),
+        default="数据分布",
+        required=True,
+        key="eda_category",
+        width="stretch",
+        label_visibility="collapsed",
+    )
     category_column, chart_column = st.columns([0.32, 0.68], gap="large")
     with category_column:
-        category = st.radio("分析类别", list(figures), label_visibility="collapsed")
-        chart_name = st.selectbox("选择图表", list(figures[category]))
+        st.markdown("**当前分类图表**")
+        chart_name = st.pills(
+            "选择图表",
+            options=list(figures[category]),
+            default=list(figures[category])[0],
+            required=True,
+            key="eda_chart",
+            width="stretch",
+            label_visibility="collapsed",
+        )
         file_name, purpose, conclusion = figures[category][chart_name]
         st.markdown(
             f'<div class="card"><div class="metric-label">图表目的</div><div style="margin-top:.4rem;font-size:.84rem;line-height:1.65">{purpose}</div></div>',
@@ -437,11 +576,13 @@ def render_eda() -> None:
         )
     with chart_column:
         image_path = paths["figures_dir"] / file_name
-        if image_path.is_file():
-            st.image(str(image_path), caption=chart_name, width="stretch")
-        else:
-            empty_state("图表文件不存在", "请先运行探索性数据分析流程。")
-        st.caption("注意：图表仅描述当前课程数据集；字段含义待确认部分不会在图表中扩展解释。")
+        with st.container(border=True, key="eda_figure_card"):
+            st.markdown(f"**{chart_name}**")
+            if image_path.is_file():
+                st.image(str(image_path), width="stretch")
+            else:
+                empty_state("图表文件不存在", "请先运行探索性数据分析流程。")
+            st.caption("注意：图表仅描述当前课程数据集；字段含义待确认部分不会在图表中扩展解释。")
 
 
 # 解析逗号分隔的隐藏层结构并校验正整数。
@@ -460,37 +601,125 @@ def _training_parameters(model_name: str, config: dict) -> dict:
     defaults = config["training"][model_name]
     if model_name == "sklearn_logistic":
         candidate = defaults["candidates"][1]
-        return {
-            "C": st.number_input("正则化倒数 C", 0.01, 20.0, float(candidate["C"]), 0.1, help="值越小，正则化越强。"),
-            "class_weight": st.selectbox("类别权重", [None, "balanced"], format_func=lambda value: "不加权" if value is None else "自动平衡"),
-            "max_iter": st.number_input("最大迭代次数", 50, 2000, int(defaults["max_iter"]), 50),
-        }
+        regularization = st.number_input(
+            "正则化倒数 C",
+            0.01,
+            20.0,
+            float(candidate["C"]),
+            0.1,
+            help="值越小，正则化越强。",
+        )
+        class_weight = st.selectbox(
+            "类别权重",
+            [None, "balanced"],
+            format_func=lambda value: "不加权" if value is None else "自动平衡",
+        )
+        with st.expander("高级参数", expanded=False):
+            max_iter = st.number_input(
+                "最大迭代次数", 50, 2000, int(defaults["max_iter"]), 50
+            )
+        return {"C": regularization, "class_weight": class_weight, "max_iter": max_iter}
     if model_name == "sklearn_mlp":
         candidate = defaults["candidates"][0]
-        layer_text = st.text_input("隐藏层结构", value=",".join(str(value) for value in candidate["hidden_layer_sizes"]), help="使用逗号分隔，如 128,64。")
+        layer_text = st.text_input(
+            "隐藏层结构",
+            value=",".join(str(value) for value in candidate["hidden_layer_sizes"]),
+            help="使用逗号分隔，如 128,64。",
+        )
+        activation = st.segmented_control(
+            "激活函数", ["relu", "tanh"], default="relu", width="stretch"
+        )
+        with st.expander("高级参数", expanded=False):
+            alpha = st.number_input(
+                "L2 正则化系数",
+                0.00001,
+                0.1,
+                float(candidate["alpha"]),
+                format="%.5f",
+            )
+            learning_rate = st.number_input(
+                "初始学习率",
+                0.0001,
+                0.1,
+                float(candidate["learning_rate_init"]),
+                format="%.4f",
+            )
+            max_iter = st.number_input(
+                "最大迭代次数", 50, 1000, int(defaults["max_iter"]), 25
+            )
         return {
             "hidden_layer_sizes": _parse_hidden_layers(layer_text),
-            "activation": st.selectbox("激活函数", ["relu", "tanh"], index=0),
-            "alpha": st.number_input("L2 正则化系数", 0.00001, 0.1, float(candidate["alpha"]), format="%.5f"),
-            "learning_rate_init": st.number_input("初始学习率", 0.0001, 0.1, float(candidate["learning_rate_init"]), format="%.4f"),
-            "max_iter": st.number_input("最大迭代次数", 50, 1000, int(defaults["max_iter"]), 25),
+            "activation": activation,
+            "alpha": alpha,
+            "learning_rate_init": learning_rate,
+            "max_iter": max_iter,
         }
     if model_name == "manual_logistic":
+        learning_rate = st.number_input(
+            "学习率", 0.001, 1.0, float(defaults["learning_rate"]), format="%.3f"
+        )
+        max_epochs = st.number_input(
+            "最大训练轮数", 10, 2000, int(defaults["max_epochs"]), 10
+        )
+        with st.expander("高级参数", expanded=False):
+            l2 = st.number_input(
+                "L2 正则化系数", 0.0, 0.1, float(defaults["l2"]), format="%.4f"
+            )
+            patience = st.number_input(
+                "早停耐心轮数", 2, 200, int(defaults["patience"]), 1
+            )
+            tolerance = st.number_input(
+                "最小改进阈值",
+                0.000001,
+                0.01,
+                float(defaults["tolerance"]),
+                format="%.6f",
+            )
         return {
-            "learning_rate": st.number_input("学习率", 0.001, 1.0, float(defaults["learning_rate"]), format="%.3f"),
-            "l2": st.number_input("L2 正则化系数", 0.0, 0.1, float(defaults["l2"]), format="%.4f"),
-            "max_epochs": st.number_input("最大训练轮数", 10, 2000, int(defaults["max_epochs"]), 10),
-            "patience": st.number_input("早停耐心轮数", 2, 200, int(defaults["patience"]), 1),
-            "tolerance": st.number_input("最小改进阈值", 0.000001, 0.01, float(defaults["tolerance"]), format="%.6f"),
+            "learning_rate": learning_rate,
+            "l2": l2,
+            "max_epochs": max_epochs,
+            "patience": patience,
+            "tolerance": tolerance,
         }
+    hidden_size = st.number_input(
+        "隐藏层神经元数", 4, 512, int(defaults["hidden_size"]), 4
+    )
+    max_epochs = st.number_input(
+        "最大训练轮数", 10, 1000, int(defaults["max_epochs"]), 10
+    )
+    with st.expander("高级参数", expanded=False):
+        learning_rate = st.number_input(
+            "学习率",
+            0.0001,
+            0.5,
+            float(defaults["learning_rate"]),
+            format="%.4f",
+        )
+        l2 = st.number_input(
+            "L2 正则化系数", 0.0, 0.1, float(defaults["l2"]), format="%.4f"
+        )
+        batch_size = st.number_input(
+            "批次大小", 16, 2048, int(defaults["batch_size"]), 16
+        )
+        patience = st.number_input(
+            "早停耐心轮数", 2, 200, int(defaults["patience"]), 1
+        )
+        tolerance = st.number_input(
+            "最小改进阈值",
+            0.000001,
+            0.01,
+            float(defaults["tolerance"]),
+            format="%.6f",
+        )
     return {
-        "hidden_size": st.number_input("隐藏层神经元数", 4, 512, int(defaults["hidden_size"]), 4),
-        "learning_rate": st.number_input("学习率", 0.0001, 0.5, float(defaults["learning_rate"]), format="%.4f"),
-        "l2": st.number_input("L2 正则化系数", 0.0, 0.1, float(defaults["l2"]), format="%.4f"),
-        "max_epochs": st.number_input("最大训练轮数", 10, 1000, int(defaults["max_epochs"]), 10),
-        "batch_size": st.number_input("批次大小", 16, 2048, int(defaults["batch_size"]), 16),
-        "patience": st.number_input("早停耐心轮数", 2, 200, int(defaults["patience"]), 1),
-        "tolerance": st.number_input("最小改进阈值", 0.000001, 0.01, float(defaults["tolerance"]), format="%.6f"),
+        "hidden_size": hidden_size,
+        "learning_rate": learning_rate,
+        "l2": l2,
+        "max_epochs": max_epochs,
+        "batch_size": batch_size,
+        "patience": patience,
+        "tolerance": tolerance,
     }
 
 
@@ -524,7 +753,11 @@ def _render_training_result(result: dict) -> None:
         else:
             empty_state("没有逐轮训练曲线", "该 sklearn 模型未保存逐轮训练曲线。")
     with tabs[4]:
-        st.json(result["parameters"])
+        st.dataframe(
+            parameter_summary_frame(result["display_name"], result["parameters"]),
+            hide_index=True,
+            width="stretch",
+        )
     action_columns = st.columns(2)
     with action_columns[0]:
         if st.button("保留为实验结果", width="stretch"):
@@ -542,6 +775,15 @@ def _render_training_result(result: dict) -> None:
 # 展示动态参数、真实训练状态和结果应用流程。
 def render_training() -> None:
     page_header("模型训练中心", "按模型配置真实训练参数，保存实验后再决定是否应用到预测。")
+    result_step_class = "step-item active" if st.session_state.get("training_result") else "step-item"
+    st.markdown(
+        '<div class="step-strip">'
+        '<div class="step-item active"><span class="step-number">1</span><span>选择模型与参数</span></div>'
+        '<div class="step-item"><span class="step-number">2</span><span>确认训练配置</span></div>'
+        f'<div class="{result_step_class}"><span class="step-number">3</span><span>查看训练结果</span></div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
     try:
         config, _ = load_workflow_context()
     except (FileNotFoundError, OSError, ValueError) as error:
@@ -568,21 +810,31 @@ def render_training() -> None:
             f'<div class="metric-help" style="margin-top:.7rem">实现：{MODEL_INFO[model_name]["implementation"]}<br>耗时提示：{estimate}<br>选择依据：验证集指标或验证损失早停</div></div>',
             unsafe_allow_html=True,
         )
-        with st.expander("查看参数摘要", expanded=True):
-            st.json(parameters)
+        st.markdown("**参数摘要**")
+        st.dataframe(
+            parameter_summary_frame(MODEL_INFO[model_name]["name"], parameters),
+            hide_index=True,
+            width="stretch",
+        )
+        with st.expander("查看原始配置", expanded=False):
+            st.code(json.dumps(parameters, ensure_ascii=False, indent=2), language="json")
         confirmed = st.checkbox("我已确认参数，并了解测试集不参与调参或活动模型选择。")
         start = st.button("开始训练", type="primary", width="stretch", disabled=not confirmed)
     if start:
         section_header("3 · 训练过程", "sklearn 模型无法提供可靠逐轮回调，因此使用真实阶段式状态。")
         progress = st.progress(0, text="正在加载并校验数据……")
         status = st.status("训练任务进行中", expanded=True)
+        started_at = perf_counter()
+        elapsed_placeholder = st.empty()
         try:
+            elapsed_placeholder.caption("已运行时间：0.00 秒")
             status.write("正在加载数据并复用固定分层划分。")
             progress.progress(15, text="正在准备训练集与预处理器……")
             sleep(0.05)
             status.write("正在构建模型并执行训练、验证与测试评估。")
             progress.progress(35, text="正在训练模型；此阶段使用真实算法运行时间……")
             result = train_selected_model(model_name, parameters)
+            elapsed_placeholder.caption(f"已运行时间：{perf_counter() - started_at:.2f} 秒")
             status.write("训练完成，正在读取已保存的评估产物。")
             progress.progress(85, text="正在整理混淆矩阵、分类报告与参数摘要……")
             sleep(0.05)
@@ -597,7 +849,17 @@ def render_training() -> None:
     result = st.session_state.get("training_result")
     if result is None:
         section_header("训练结果", "完成一次训练后，这里会显示真实指标、图表和模型应用操作。")
-        empty_state("暂无本次训练结果", "确认参数后点击“开始训练”。")
+        empty_state(
+            "暂无本次训练结果",
+            "确认参数后点击“开始训练”，或查看最近保存的正式实验。",
+            ("页面打开不会自动训练", "训练完成后活动模型保持不变"),
+        )
+        if st.button("查看最近已保存结果", key="show_saved_training_result"):
+            try:
+                st.session_state["training_result"] = load_model_metrics(model_name)
+                st.rerun()
+            except (FileNotFoundError, OSError, ValueError) as error:
+                show_error(error, "最近训练结果加载")
     else:
         _render_training_result(result)
 
@@ -623,11 +885,23 @@ def render_about() -> None:
     section_header("设计目标与模型结构")
     columns = st.columns(2)
     with columns[0]:
-        st.markdown('<div class="card"><strong>设计目标</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65">基于真实 CSV 完成可复现、可解释、可测试的七类别系统；统一数据入口、划分、预处理和评估标准。</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="card"><strong>sklearn 实现</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65">使用 LogisticRegression 与 MLPClassifier，侧重成熟优化、稳定基线和工程化 Pipeline。</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="card feature-card"><span class="badge">01</span><strong>设计目标</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65;white-space:normal">基于真实 CSV 完成可复现、可解释、可测试的七类别系统；统一数据入口、划分、预处理和评估标准。</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="card feature-card"><span class="badge">03</span><strong>sklearn 实现</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65;white-space:normal">使用 LogisticRegression 与 MLPClassifier，侧重成熟优化、稳定基线和工程化 Pipeline。</div></div>', unsafe_allow_html=True)
     with columns[1]:
-        st.markdown('<div class="card"><strong>数据泄漏防护</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65">训练集拟合全部预处理器，验证集用于参数与早停，测试集仅用于最终指标、矩阵和报告。</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="card"><strong>NumPy 手写实现</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65">实现 Softmax、交叉熵、梯度下降、反向传播、L2、mini-batch 与早停，侧重算法过程展示。</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="card feature-card"><span class="badge">02</span><strong>数据泄漏防护</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65;white-space:normal">训练集拟合全部预处理器，验证集用于参数与早停，测试集仅用于最终指标、矩阵和报告。</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="card feature-card"><span class="badge">04</span><strong>NumPy 手写实现</strong><div class="metric-help" style="margin-top:.55rem;line-height:1.65;white-space:normal">实现 Softmax、交叉熵、梯度下降、反向传播、L2、mini-batch 与早停，侧重算法过程展示。</div></div>', unsafe_allow_html=True)
+
+    section_header("四模型结构对比", "成熟库实现用于稳定基线，手写实现用于展示核心算法过程。")
+    model_columns = st.columns(4)
+    model_details = (
+        ("sklearn 逻辑回归", "线性分类", "成熟优化 · 稳定基线"),
+        ("sklearn 神经网络", "多层感知机", "非线性表达 · 自动早停"),
+        ("NumPy 手写逻辑回归", "Softmax", "梯度下降 · L2"),
+        ("NumPy 手写神经网络", "单隐藏层", "反向传播 · mini-batch"),
+    )
+    for column, (name, structure, detail) in zip(model_columns, model_details):
+        with column:
+            metric_card(name, structure, detail, model_value=True)
 
     section_header("评价指标", "类别分布存在差异，因此不能只看 Accuracy。")
     metric_columns = st.columns(4)

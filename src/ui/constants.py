@@ -76,4 +76,13 @@ NAV_ITEMS = (
     "项目说明",
 )
 
+NAV_LABELS = {
+    "系统概览": ":material/dashboard:  系统概览",
+    "肥胖风险预测": ":material/analytics:  肥胖风险预测",
+    "模型性能分析": ":material/monitoring:  模型性能分析",
+    "数据探索分析": ":material/query_stats:  数据探索分析",
+    "模型训练中心": ":material/model_training:  模型训练中心",
+    "项目说明": ":material/info:  项目说明",
+}
+
 DISCLAIMER = "该结果仅为模型基于课程数据集生成的分类结果，不构成医学诊断、健康评估或治疗建议。"
