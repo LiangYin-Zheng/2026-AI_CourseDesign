@@ -19,6 +19,8 @@
 
 现有数据说明尚未正式确认部分缩写字段的完整含义、单位与 0/1 映射，因此界面使用“中文候选名 + 原字段名 + 真实观察范围/取值”的中性展示，避免将推测写成既定事实。
 
+第二轮界面优化使用统一蓝灰设计令牌、圆角卡片、整行侧边导航、Plotly 模型对比图和响应式布局。Streamlit 主题与演示工具栏配置位于 `.streamlit/config.toml`，设计参考和许可证决策记录在 `docs/requirements/14_ui_visual_reference.md`。修改前后视觉截图保存于 `outputs/ui_screenshots/before/` 和 `outputs/ui_screenshots/after/`；该目录属于本地视觉验收产物，不进入版本控制。
+
 ## 输出目录
 
 ```text
