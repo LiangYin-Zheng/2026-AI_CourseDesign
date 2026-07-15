@@ -41,6 +41,37 @@ def metric_card(
     )
 
 
+# 生成紧凑预测结果卡的安全 HTML。
+def prediction_result_card_html(
+    chinese_label: str,
+    english_label: str,
+    confidence: str,
+    model_name: str,
+    model_kind: str,
+    elapsed: str,
+    animate: bool = False,
+) -> str:
+    card_class = "result-card result-enter" if animate else "result-card"
+    return (
+        f'<div class="{card_class}">'
+        '<span class="status-pill"><span class="status-dot"></span>预测完成</span>'
+        '<div class="result-summary">'
+        '<div class="result-primary"><div class="result-label">预测结果</div>'
+        f'<div class="result-class">{html.escape(chinese_label)}</div>'
+        f'<div class="result-original">{html.escape(english_label)}</div></div>'
+        '<div class="result-score"><div class="result-label">模型置信度</div>'
+        f'<div class="result-confidence">{html.escape(confidence)}</div></div></div>'
+        '<div class="result-divider"></div><div class="result-meta-grid">'
+        '<div><span>使用模型</span>'
+        f'<strong>{html.escape(model_name)}</strong></div>'
+        '<div><span>模型类型</span>'
+        f'<strong>{html.escape(model_kind)}</strong></div>'
+        '<div><span>推理耗时</span>'
+        f'<strong>{html.escape(elapsed)}</strong></div>'
+        '</div></div>'
+    )
+
+
 # 输出带运行圆点的低饱和状态徽标。
 def status_pill(text: str) -> None:
     st.markdown(
