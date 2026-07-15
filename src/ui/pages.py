@@ -5,8 +5,10 @@ from time import perf_counter, sleep
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from plotly.subplots import make_subplots
 
 from application.workflows import load_workflow_context
+from data.loader import load_csv_readonly
 from ui.components import (
     disclaimer,
     empty_state,
@@ -16,7 +18,13 @@ from ui.components import (
     section_header,
     show_error,
 )
-from ui.constants import CATEGORY_LABELS, CLASS_LABELS, FIELD_INFO, MODEL_INFO
+from ui.constants import (
+    CATEGORY_LABELS,
+    CLASS_LABELS,
+    FIELD_INFO,
+    MODEL_INFO,
+    TARGET_DISPLAY_LABELS,
+)
 from ui.services import (
     activate_model,
     classification_report_frame,
@@ -238,10 +246,10 @@ def _render_input(field: str, metadata: dict) -> object:
     options = metadata["categorical_options"][field]
     if len(options) == 2:
         compact_labels = {
-            "Female": "女性候选",
-            "Male": "男性候选",
-            0: "0",
-            1: "1",
+            "Female": "女性",
+            "Male": "男性",
+            0: "否",
+            1: "是",
         }
         return st.segmented_control(
             label,
@@ -303,7 +311,7 @@ def _render_prediction_result(result: dict) -> None:
     st.markdown(
         '<div class="result-card"><div class="result-label">预测结果</div>'
         f'<div class="result-class">{CLASS_LABELS[predicted]}</div>'
-        f'<div class="result-original">原始标签：{predicted}</div>'
+        f'<div class="result-original">英文标签：{TARGET_DISPLAY_LABELS[predicted]}</div>'
         f'<div class="result-confidence">{_percent(result["highest_probability"])}</div>'
         '<div class="metric-help">最高预测概率</div></div>',
         unsafe_allow_html=True,
@@ -319,7 +327,7 @@ def _render_prediction_result(result: dict) -> None:
     probability_rows = [
         {
             "类别": CLASS_LABELS[label],
-            "原始标签": label,
+            "英文标签": TARGET_DISPLAY_LABELS[label],
             "预测概率": float(probability),
         }
         for label, probability in sorted(
@@ -344,7 +352,7 @@ def render_prediction() -> None:
         return
     input_column, result_column = st.columns([1.08, 0.92], gap="large")
     with input_column:
-        section_header("输入样本", "字段范围和选项直接取自活动模型；候选中文含义尚待正式数据说明确认。")
+        section_header("输入样本", "使用中文选项填写身体、饮食和生活习惯；帮助提示中可查看原始字段与范围。")
         action_columns = st.columns([0.72, 0.28])
         with action_columns[0]:
             if st.button("加载示例", width="content", key="load_prediction_example"):
@@ -395,7 +403,7 @@ def _localized_report(metrics: dict) -> pd.DataFrame:
     frame = classification_report_frame(metrics)
     summary_labels = {"macro avg": "宏平均", "weighted avg": "加权平均"}
     frame["类别"] = frame["类别"].map(
-        lambda value: f"{CLASS_LABELS[value]} · {value}"
+        lambda value: f"{CLASS_LABELS[value]} · {TARGET_DISPLAY_LABELS[value]}"
         if value in CLASS_LABELS
         else summary_labels.get(value, value)
     )
@@ -506,11 +514,190 @@ def _strongest_correlation(summary: dict) -> tuple[str, str, float]:
     return max(candidates, key=lambda item: abs(item[2]))
 
 
+# 将 EDA 图表统一为适合课程展示的蓝灰视觉样式。
+def _style_eda_figure(figure: go.Figure, height: int = 500) -> go.Figure:
+    figure.update_layout(
+        height=height,
+        margin={"l": 34, "r": 28, "t": 52, "b": 42},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={
+            "family": "-apple-system, BlinkMacSystemFont, PingFang SC, sans-serif",
+            "color": "#64748B",
+            "size": 12,
+        },
+        hoverlabel={"bgcolor": "#172033", "font_color": "#FFFFFF"},
+        showlegend=False,
+    )
+    figure.update_xaxes(
+        showgrid=True,
+        gridcolor="#EEF2F7",
+        zeroline=False,
+        linecolor="#E2E8F0",
+        tickfont={"size": 11},
+        title_font={"size": 12},
+    )
+    figure.update_yaxes(
+        showgrid=False,
+        zeroline=False,
+        linecolor="#E2E8F0",
+        tickfont={"size": 11},
+        title_font={"size": 12},
+        automargin=True,
+    )
+    return figure
+
+
+# 使用只读真实数据和结构化摘要生成当前 EDA 展示图。
+def _eda_figure(chart_name: str, frame: pd.DataFrame, summary: dict) -> go.Figure:
+    feature_labels = {
+        "Age": "年龄",
+        "Height": "身高",
+        "Weight": "体重",
+        "FCVC": "蔬菜摄入频率",
+        "NCP": "每日主要进餐次数",
+        "CH2O": "每日饮水水平",
+        "FAF": "身体活动频率",
+        "TUE": "电子设备使用时长",
+    }
+    target_column = frame.columns[-1]
+    numeric_charts = {
+        "年龄分布": ("Age", "年龄（岁）"),
+        "身高分布": ("Height", "身高（米）"),
+        "体重分布": ("Weight", "体重（千克）"),
+    }
+    if chart_name in numeric_charts:
+        field, axis_title = numeric_charts[chart_name]
+        figure = go.Figure(
+            go.Histogram(
+                x=frame[field],
+                marker={"color": "#6B9CE8", "line": {"width": 0}},
+                opacity=0.9,
+                nbinsx=32,
+                hovertemplate="区间：%{x}<br>样本数：%{y:,}<extra></extra>",
+            )
+        )
+        figure.update_xaxes(title_text=axis_title)
+        figure.update_yaxes(title_text="样本数")
+        return _style_eda_figure(figure, 470)
+    if chart_name == "目标类别分布":
+        rows = sorted(
+            summary["target_distribution"].items(),
+            key=lambda item: item[1]["count"],
+        )
+        figure = go.Figure(
+            go.Bar(
+                x=[value["count"] for _, value in rows],
+                y=[CLASS_LABELS[label] for label, _ in rows],
+                orientation="h",
+                marker={"color": "#6B9CE8"},
+                text=[f'{value["count"]:,} · {value["ratio"] * 100:.1f}%' for _, value in rows],
+                textposition="outside",
+                cliponaxis=False,
+                hovertemplate="%{y}<br>%{text}<extra></extra>",
+            )
+        )
+        figure.update_xaxes(title_text="样本数")
+        return _style_eda_figure(figure, 470)
+    if chart_name == "类别特征频数":
+        fields = (
+            ("Gender", "性别"),
+            ("family_history_with_overweight", "超重家族史"),
+            ("FAVC", "高热量食物摄入"),
+            ("MTRANS", "主要交通方式"),
+        )
+        figure = make_subplots(rows=2, cols=2, subplot_titles=[label for _, label in fields])
+        for index, (field, _) in enumerate(fields):
+            counts = frame[field].value_counts().sort_values(ascending=False)
+            row = index // 2 + 1
+            column = index % 2 + 1
+            figure.add_trace(
+                go.Bar(
+                    x=[CATEGORY_LABELS.get(value, str(value)) for value in counts.index],
+                    y=counts.values,
+                    marker={"color": "#7EA7E8"},
+                    text=[f"{value:,}" for value in counts.values],
+                    textposition="outside",
+                    cliponaxis=False,
+                    hovertemplate="%{x}<br>样本数：%{y:,}<extra></extra>",
+                ),
+                row=row,
+                col=column,
+            )
+        return _style_eda_figure(figure, 610)
+    if chart_name == "关键特征分组关系":
+        grouped = summary["grouped_numeric_means"]
+        labels = sorted(grouped, key=lambda label: grouped[label]["Weight"])
+        figure = make_subplots(
+            rows=1,
+            cols=2,
+            subplot_titles=("各类别平均年龄", "各类别平均体重"),
+            horizontal_spacing=0.24,
+        )
+        for column, field in enumerate(("Age", "Weight"), start=1):
+            figure.add_trace(
+                go.Bar(
+                    x=[grouped[label][field] for label in labels],
+                    y=[CLASS_LABELS[label] for label in labels],
+                    orientation="h",
+                    marker={"color": "#6B9CE8"},
+                    text=[f'{grouped[label][field]:.1f}' for label in labels],
+                    textposition="outside",
+                    cliponaxis=False,
+                    hovertemplate="%{y}<br>均值：%{x:.2f}<extra></extra>",
+                ),
+                row=1,
+                col=column,
+            )
+        return _style_eda_figure(figure, 520)
+    if chart_name == "年龄身高体重关系":
+        sample = frame.sample(n=min(len(frame), 2400), random_state=42)
+        figure = go.Figure(
+            go.Scattergl(
+                x=sample["Height"],
+                y=sample["Weight"],
+                mode="markers",
+                marker={
+                    "size": 7,
+                    "color": sample["Age"],
+                    "colorscale": [[0, "#DCE9FA"], [1, "#2563EB"]],
+                    "opacity": 0.62,
+                    "colorbar": {"title": "年龄", "thickness": 12},
+                },
+                customdata=[CLASS_LABELS[value] for value in sample[target_column]],
+                hovertemplate="身高：%{x:.2f} 米<br>体重：%{y:.1f} 千克<br>类别：%{customdata}<extra></extra>",
+            )
+        )
+        figure.update_xaxes(title_text="身高（米）")
+        figure.update_yaxes(title_text="体重（千克）")
+        return _style_eda_figure(figure, 540)
+    correlations = summary["numeric_correlations"]
+    fields = list(correlations)
+    values = [[correlations[row][column] for column in fields] for row in fields]
+    figure = go.Figure(
+        go.Heatmap(
+            z=values,
+            x=[feature_labels[field] for field in fields],
+            y=[feature_labels[field] for field in fields],
+            zmin=-1,
+            zmax=1,
+            colorscale=[[0, "#B7CBEA"], [0.5, "#FFFFFF"], [1, "#2563EB"]],
+            text=[[f"{value:.2f}" for value in row] for row in values],
+            texttemplate="%{text}",
+            hovertemplate="%{y} × %{x}<br>相关系数：%{z:.3f}<extra></extra>",
+            colorbar={"title": "相关系数", "thickness": 12},
+        )
+    )
+    figure.update_yaxes(autorange="reversed")
+    return _style_eda_figure(figure, 590)
+
+
 # 展示按类别浏览的 EDA 图表中心。
 def render_eda() -> None:
     page_header("数据探索分析", "按分析主题浏览真实数据图表、图表目的和简短结论。")
     try:
         _, paths = load_workflow_context()
+        frame = load_csv_readonly(paths["raw_data"])
         summary = read_json(paths["figures_dir"].parent / "eda_summary.json")
         audit = read_json(paths["audit_report_dir"] / "data_audit.json")
     except (FileNotFoundError, OSError, ValueError) as error:
@@ -527,7 +714,9 @@ def render_eda() -> None:
     left_feature, right_feature, correlation = _strongest_correlation(summary)
     figures = {
         "数据分布": {
-            "数值特征分布": ("numeric_distributions.png", "观察主要数值特征的集中趋势和离散程度。", "Age、Height、Weight 与五个量表字段的分布形态存在差异，建模前已仅用训练集拟合标准化。"),
+            "年龄分布": ("numeric_distributions.png", "观察年龄的集中趋势和离散程度。", "样本年龄主要集中在青年阶段，建模前已仅用训练集拟合标准化。"),
+            "身高分布": ("numeric_distributions.png", "观察身高的集中趋势和离散程度。", "身高分布相对集中，但不同目标类别之间仍存在重叠。"),
+            "体重分布": ("numeric_distributions.png", "观察体重的集中趋势和离散程度。", "体重的分布范围较宽，是区分类别的重要特征之一，但不能单独决定类别。"),
         },
         "类别分布": {
             "目标类别分布": ("target_distribution.png", "检查七个目标类别的样本量与比例。", f"当前最大类别占比为 {max(value['ratio'] for value in summary['target_distribution'].values()) * 100:.2f}%，模型评价同时报告宏平均指标。"),
@@ -578,11 +767,20 @@ def render_eda() -> None:
         image_path = paths["figures_dir"] / file_name
         with st.container(border=True, key="eda_figure_card"):
             st.markdown(f"**{chart_name}**")
-            if image_path.is_file():
-                st.image(str(image_path), width="stretch")
-            else:
-                empty_state("图表文件不存在", "请先运行探索性数据分析流程。")
-            st.caption("注意：图表仅描述当前课程数据集；字段含义待确认部分不会在图表中扩展解释。")
+            try:
+                figure = _eda_figure(chart_name, frame, summary)
+                st.plotly_chart(
+                    figure,
+                    width="stretch",
+                    config={"displayModeBar": False, "responsive": True},
+                    key=f"eda_plot_{file_name}",
+                )
+            except (KeyError, TypeError, ValueError):
+                if image_path.is_file():
+                    st.image(str(image_path), width="stretch")
+                else:
+                    empty_state("图表文件不存在", "请先运行探索性数据分析流程。")
+            st.caption("注意：展示图由只读课程数据生成，仅描述当前数据集；相关性与分组差异不代表因果关系。")
 
 
 # 解析逗号分隔的隐藏层结构并校验正整数。
