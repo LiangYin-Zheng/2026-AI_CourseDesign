@@ -127,8 +127,14 @@ h1, h2, h3 { letter-spacing: -0.018em; }
     box-shadow: inset 3px 0 0 var(--color-primary);
 }
 [data-testid="stSidebar"] label[data-testid="stRadioOption"]:focus-within {
-    outline: 2px solid rgba(37, 99, 235, .35);
-    outline-offset: 2px;
+    outline: none;
+}
+[data-testid="stSidebar"] label[data-testid="stRadioOption"] span:focus-visible {
+    outline: none;
+}
+[data-testid="stSidebar"] label[data-testid="stRadioOption"]:focus-within:not([data-selected="true"]) {
+    background: var(--color-surface-soft);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 .sidebar-footer {
     margin-top: var(--space-6);
@@ -475,12 +481,22 @@ h1, h2, h3 { letter-spacing: -0.018em; }
     box-shadow: var(--shadow-md);
 }
 .stButton > button:active, .stFormSubmitButton > button:active { transform: translateY(1px); }
-.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primary"] {
+.stButton > button[kind="primary"],
+.stFormSubmitButton > button[kind="primaryFormSubmit"],
+[data-testid="stBaseButton-primaryFormSubmit"] {
     color: #FFFFFF;
     background: var(--color-primary);
     border-color: var(--color-primary);
 }
-.stButton > button[kind="primary"]:hover, .stFormSubmitButton > button[kind="primary"]:hover {
+.stButton > button[kind="primary"] p,
+.stFormSubmitButton > button[kind="primaryFormSubmit"] p,
+[data-testid="stBaseButton-primary"] p,
+[data-testid="stBaseButton-primaryFormSubmit"] p {
+    color: #FFFFFF;
+}
+.stButton > button[kind="primary"]:hover,
+.stFormSubmitButton > button[kind="primaryFormSubmit"]:hover,
+[data-testid="stBaseButton-primaryFormSubmit"]:hover {
     color: #FFFFFF;
     background: var(--color-primary-dark);
     border-color: var(--color-primary-dark);
@@ -492,6 +508,7 @@ h1, h2, h3 { letter-spacing: -0.018em; }
     opacity: .78;
     box-shadow: none;
 }
+.stButton > button:disabled p, .stFormSubmitButton > button:disabled p { color: var(--color-text-muted); }
 [data-baseweb="input"], [data-baseweb="select"] > div {
     min-height: 44px;
     border-radius: 12px;
