@@ -1,8 +1,18 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from data.loader import load_csv_readonly
-from ui.pages import _eda_figure
+from ui.components import prediction_result_card_html
+from ui.pages import (
+    EDA_CHART_HEIGHTS,
+    _eda_figure,
+    _parse_hidden_layers,
+    _result_tab_names,
+    _training_curve_figure,
+    _training_step_states,
+)
 
 
 # 验证项目主题精简工具栏并统一基础视觉颜色。
@@ -86,4 +96,105 @@ def test_all_eda_display_figures_render_from_real_data() -> None:
     for chart_name in chart_names:
         figure = _eda_figure(chart_name, frame, summary)
         assert figure.data
-        assert figure.layout.height >= 450
+        assert figure.layout.height == EDA_CHART_HEIGHTS[chart_name]
+
+
+# 验证预测完成状态集中展示完整结果信息且不生成窄指标卡。
+def test_prediction_result_card_contains_complete_summary() -> None:
+    markup = prediction_result_card_html(
+        chinese_label="正常体重",
+        english_label="Normal_Weight",
+        confidence="99.31%",
+        model_name="sklearn 神经网络",
+        model_kind="多层感知机",
+        elapsed="7.39 ms",
+        animate=True,
+    )
+
+    for text in (
+        "正常体重",
+        "Normal_Weight",
+        "99.31%",
+        "sklearn 神经网络",
+        "多层感知机",
+        "7.39 ms",
+    ):
+        assert text in markup
+    assert "result-enter" in markup
+    assert "metric-card" not in markup
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    (("64", (64,)), ("64,32", (64, 32)), ("64, 32", (64, 32))),
+)
+# 验证合法隐藏层文本可解析为整数元组。
+def test_parse_hidden_layers_accepts_supported_values(
+    value: str, expected: tuple[int, ...]
+) -> None:
+    assert _parse_hidden_layers(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    ("", "64,,32", "abc", "64.0", "0", "-1", "4,4,4,4,4", "3", "513"),
+)
+# 验证非法隐藏层结构给出中文错误且不会进入训练。
+def test_parse_hidden_layers_rejects_invalid_values(value: str) -> None:
+    with pytest.raises(ValueError, match="隐藏层"):
+        _parse_hidden_layers(value)
+
+
+# 验证训练标签页只在存在真实历史时加入曲线。
+def test_training_tabs_follow_real_history_capability() -> None:
+    assert "训练曲线" not in _result_tab_names(False)
+    assert "训练曲线" in _result_tab_names(True)
+
+
+# 验证真实历史可以生成蓝灰主题 Plotly 曲线。
+def test_training_history_builds_plotly_curve() -> None:
+    figure = _training_curve_figure(
+        {
+            "train_loss": [1.0, 0.8, 0.6],
+            "validation_loss": [1.1, 0.9, 0.7],
+            "validation_score": [],
+            "best_epoch": 3,
+            "early_stopped": True,
+        }
+    )
+
+    assert len(figure.data) >= 2
+    assert figure.layout.height == 420
+
+
+# 验证训练步骤在配置、确认、完成和失败状态下语义正确。
+def test_training_step_states_cover_all_outcomes() -> None:
+    assert _training_step_states(False, False, False) == (
+        "active",
+        "pending",
+        "pending",
+    )
+    assert _training_step_states(True, False, False) == (
+        "complete",
+        "active",
+        "pending",
+    )
+    assert _training_step_states(True, True, False) == (
+        "complete",
+        "complete",
+        "active",
+    )
+    assert _training_step_states(True, False, True) == (
+        "complete",
+        "complete",
+        "error",
+    )
+
+
+# 验证动态效果提供减少动画偏好并避免自动生成类名。
+def test_motion_styles_support_reduced_motion() -> None:
+    styles = Path("src/ui/styles.py").read_text(encoding="utf-8")
+
+    assert "@keyframes ui-fade-up" in styles
+    assert "@media (prefers-reduced-motion: reduce)" in styles
+    assert "st-emotion-cache" not in styles

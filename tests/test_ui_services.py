@@ -6,10 +6,12 @@ import joblib
 from ui.constants import CLASS_LABELS, FIELD_INFO, MODEL_INFO, TARGET_DISPLAY_LABELS
 from ui.services import (
     activate_model,
+    create_training_run_paths,
     load_dashboard_data,
     load_example_sample,
     predict_sample,
     project_relative_path,
+    load_training_history,
 )
 
 
@@ -105,3 +107,35 @@ def test_activate_model_copies_selected_bundle(tmp_path: Path) -> None:
     assert metadata["test_set_used_for_selection"] is False
     saved = json.loads((models_dir / "best_model.json").read_text(encoding="utf-8"))
     assert saved == metadata
+
+
+# 验证四类正式模型仅返回实际保存的逐轮历史。
+def test_training_history_matches_saved_model_capability() -> None:
+    models_dir = Path("outputs/models")
+
+    assert load_training_history(models_dir / "sklearn_logistic.joblib") is None
+    sklearn_mlp = load_training_history(models_dir / "sklearn_mlp.joblib")
+    manual_logistic = load_training_history(models_dir / "manual_logistic.joblib")
+    manual_mlp = load_training_history(models_dir / "manual_mlp.joblib")
+
+    assert sklearn_mlp is not None
+    assert len(sklearn_mlp["train_loss"]) == 21
+    assert len(sklearn_mlp["validation_score"]) == 21
+    assert manual_logistic is not None
+    assert len(manual_logistic["train_loss"]) == 300
+    assert len(manual_logistic["validation_loss"]) == 300
+    assert manual_mlp is not None
+    assert len(manual_mlp["train_loss"]) == 220
+    assert len(manual_mlp["validation_loss"]) == 220
+
+
+# 验证界面新训练使用独立 run 目录而不是正式模型目录。
+def test_create_training_run_paths_isolated_from_formal_outputs(
+    tmp_path: Path,
+) -> None:
+    paths = create_training_run_paths(tmp_path, "manual_mlp", run_id="test-run")
+
+    assert paths["run_dir"] == tmp_path / "runs" / "test-run"
+    assert paths["models_dir"].is_dir()
+    assert paths["metrics_dir"].is_dir()
+    assert paths["models_dir"] != tmp_path / "models"
