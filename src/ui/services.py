@@ -1,10 +1,13 @@
 import copy
 import json
 import shutil
+from datetime import datetime
 from pathlib import Path
 from time import perf_counter
+from uuid import uuid4
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from application.workflows import load_workflow_context, prepare_workflow_data
@@ -112,6 +115,72 @@ def load_input_metadata() -> dict:
     return {key: bundle[key] for key in keys}
 
 
+# 从已保存模型中提取真实逐轮历史，不为缺失数据生成替代值。
+def load_training_history(model_path: Path) -> dict | None:
+    if not model_path.is_file():
+        return None
+    bundle = joblib.load(model_path)
+    if not isinstance(bundle, dict) or "model" not in bundle:
+        return None
+    model = bundle["model"]
+    classifier = (
+        model.named_steps.get("classifier")
+        if hasattr(model, "named_steps")
+        else model
+    )
+    train_loss = list(
+        getattr(classifier, "loss_curve_", None)
+        or getattr(classifier, "train_loss_history", None)
+        or []
+    )
+    validation_loss = list(getattr(classifier, "validation_loss_history", None) or [])
+    validation_score = list(getattr(classifier, "validation_scores_", None) or [])
+    if not train_loss and not validation_loss and not validation_score:
+        return None
+    if validation_loss:
+        best_epoch = int(np.argmin(validation_loss)) + 1
+    elif validation_score:
+        best_epoch = int(np.argmax(validation_score)) + 1
+    else:
+        best_epoch = int(np.argmin(train_loss)) + 1
+    trained_epochs = max(len(train_loss), len(validation_loss), len(validation_score))
+    configured_epochs = int(
+        getattr(
+            classifier,
+            "max_iter",
+            getattr(classifier, "max_epochs", trained_epochs),
+        )
+    )
+    return {
+        "train_loss": [float(value) for value in train_loss],
+        "validation_loss": [float(value) for value in validation_loss],
+        "validation_score": [float(value) for value in validation_score],
+        "best_epoch": best_epoch,
+        "early_stopped": trained_epochs < configured_epochs,
+    }
+
+
+# 为一次界面训练创建隔离的模型与指标目录。
+def create_training_run_paths(
+    output_root: Path,
+    model_name: str,
+    run_id: str | None = None,
+) -> dict[str, Path]:
+    selected_id = run_id or (
+        f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{model_name}-{uuid4().hex[:6]}"
+    )
+    run_dir = output_root / "runs" / selected_id
+    models_dir = run_dir / "models"
+    metrics_dir = run_dir / "metrics"
+    models_dir.mkdir(parents=True, exist_ok=False)
+    metrics_dir.mkdir(parents=True, exist_ok=False)
+    return {
+        "run_dir": run_dir,
+        "models_dir": models_dir,
+        "metrics_dir": metrics_dir,
+    }
+
+
 # 使用界面参数训练单个模型，并保留现有无泄漏划分与评估流程。
 def train_selected_model(model_name: str, parameters: dict) -> dict:
     if model_name not in MODEL_INFO:
@@ -138,25 +207,48 @@ def train_selected_model(model_name: str, parameters: dict) -> dict:
     else:
         runtime_config["training"][model_name].update(parameters)
     _, _, prepared = prepare_workflow_data(runtime_config, paths)
+    run_paths = create_training_run_paths(paths["models_dir"].parent, model_name)
     if model_name.startswith("sklearn_"):
-        return train_sklearn_model(
-            model_name, prepared, runtime_config, paths["models_dir"], paths["metrics_dir"]
+        result = train_sklearn_model(
+            model_name,
+            prepared,
+            runtime_config,
+            run_paths["models_dir"],
+            run_paths["metrics_dir"],
         )
-    return train_manual_model(
-        model_name, prepared, runtime_config, paths["models_dir"], paths["metrics_dir"]
+    else:
+        result = train_manual_model(
+            model_name,
+            prepared,
+            runtime_config,
+            run_paths["models_dir"],
+            run_paths["metrics_dir"],
+        )
+    result["run_dir"] = str(run_paths["run_dir"])
+    result["model_path"] = str(run_paths["models_dir"] / f"{model_name}.joblib")
+    result["metrics_dir"] = str(run_paths["metrics_dir"])
+    write_json(
+        run_paths["metrics_dir"] / f"{model_name}_metrics.json",
+        result,
     )
+    return result
 
 
 # 经用户明确操作后复制指定模型，并更新活动模型元数据。
-def activate_model(model_name: str, paths: dict[str, Path] | None = None) -> dict:
+def activate_model(
+    model_name: str,
+    paths: dict[str, Path] | None = None,
+    source_model_path: Path | None = None,
+    source_metrics: dict | None = None,
+) -> dict:
     if model_name not in MODEL_INFO:
         raise ValueError("不支持的活动模型")
     if paths is None:
         _, paths = load_workflow_context()
-    source = paths["models_dir"] / f"{model_name}.joblib"
+    source = source_model_path or paths["models_dir"] / f"{model_name}.joblib"
     if not source.is_file():
         raise FileNotFoundError("所选模型文件不存在，请先完成该模型训练")
-    metrics = load_model_metrics(model_name, paths)
+    metrics = source_metrics or load_model_metrics(model_name, paths)
     destination = paths["models_dir"] / "best_model.joblib"
     shutil.copyfile(source, destination)
     metadata = {
