@@ -8,6 +8,17 @@ CLASS_LABELS = {
     "Obesity_Type_III": "肥胖 III 型",
 }
 
+# 将原始类别值转换为界面使用的规范英文标签。
+TARGET_DISPLAY_LABELS = {
+    "Insufficient_Weight": "Insufficient_Weight",
+    "0rmal_Weight": "Normal_Weight",
+    "Overweight_Level_I": "Overweight_Level_I",
+    "Overweight_Level_II": "Overweight_Level_II",
+    "Obesity_Type_I": "Obesity_Type_I",
+    "Obesity_Type_II": "Obesity_Type_II",
+    "Obesity_Type_III": "Obesity_Type_III",
+}
+
 MODEL_INFO = {
     "sklearn_logistic": {
         "name": "sklearn 逻辑回归",
@@ -31,40 +42,40 @@ MODEL_INFO = {
     },
 }
 
-# 字段含义尚未获得正式数据说明时，使用候选名称并保留原字段名。
+# 使用面向普通用户的中文字段名称，并在帮助文字中保留原始字段。
 FIELD_INFO = {
-    "Gender": {"label": "性别", "group": "基本身体信息", "help": "类别字段；正式中文映射待数据说明确认"},
-    "Age": {"label": "年龄", "group": "基本身体信息", "unit": "数据值（疑似年）", "step": 0.1},
-    "Height": {"label": "身高", "group": "基本身体信息", "unit": "数据值（疑似米）", "step": 0.01},
-    "Weight": {"label": "体重", "group": "基本身体信息", "unit": "数据值（疑似千克）", "step": 0.1},
-    "family_history_with_overweight": {"label": "超重家族史", "group": "基本身体信息", "help": "0/1 正式含义待确认"},
-    "FAVC": {"label": "高热量食物摄入（候选）", "group": "饮食习惯", "help": "FAVC；字段含义及 0/1 映射待确认"},
-    "FCVC": {"label": "蔬菜摄入频率（候选）", "group": "饮食习惯", "unit": "数据集观察量表 1–3", "step": 0.1},
-    "NCP": {"label": "每日进餐次数（候选）", "group": "饮食习惯", "unit": "数据集观察量表 1–4", "step": 0.1},
-    "CAEC": {"label": "两餐之间进食频率（候选）", "group": "饮食习惯", "help": "CAEC；字符串 0 的含义待确认"},
-    "CH2O": {"label": "每日饮水情况（候选）", "group": "饮食习惯", "unit": "数据集观察量表 1–3", "step": 0.1},
-    "CALC": {"label": "饮酒频率（候选）", "group": "饮食习惯", "help": "CALC；字符串 0 的含义待确认"},
-    "SMOKE": {"label": "吸烟状态", "group": "生活习惯", "help": "0/1 正式含义待确认"},
-    "SCC": {"label": "热量监测（候选）", "group": "生活习惯", "help": "SCC；字段含义及 0/1 映射待确认"},
-    "FAF": {"label": "身体活动频率（候选）", "group": "生活习惯", "unit": "数据集观察量表 0–3", "step": 0.1},
-    "TUE": {"label": "电子设备使用情况（候选）", "group": "生活习惯", "unit": "数据集观察量表 0–2", "step": 0.1},
-    "MTRANS": {"label": "主要交通方式（候选）", "group": "生活习惯", "help": "MTRANS；取值显示为交通方式，正式问题文本待确认"},
+    "Gender": {"label": "性别", "group": "基本身体信息", "help": "选择女性或男性"},
+    "Age": {"label": "年龄", "group": "基本身体信息", "unit": "单位：岁", "step": 0.1},
+    "Height": {"label": "身高", "group": "基本身体信息", "unit": "单位：米", "step": 0.01},
+    "Weight": {"label": "体重", "group": "基本身体信息", "unit": "单位：千克", "step": 0.1},
+    "family_history_with_overweight": {"label": "是否有超重家族史", "group": "基本身体信息", "help": "选择“是”或“否"},
+    "FAVC": {"label": "是否经常食用高热量食物", "group": "饮食习惯", "help": "选择“是”或“否"},
+    "FCVC": {"label": "蔬菜摄入频率", "group": "饮食习惯", "unit": "1 表示较少，2 表示中等，3 表示较多；小数表示中间程度", "step": 0.1},
+    "NCP": {"label": "每日主要进餐次数", "group": "饮食习惯", "unit": "1–4 表示每天主要进餐次数；小数表示原数据中的中间值", "step": 0.1},
+    "CAEC": {"label": "两餐之间进食频率", "group": "饮食习惯", "help": "选择从不、有时、经常或总是"},
+    "CH2O": {"label": "每日饮水水平", "group": "饮食习惯", "unit": "1 表示较少，2 表示中等，3 表示较多；小数表示中间程度", "step": 0.1},
+    "CALC": {"label": "饮酒频率", "group": "饮食习惯", "help": "选择从不、有时或经常"},
+    "SMOKE": {"label": "是否吸烟", "group": "生活习惯", "help": "选择“是”或“否"},
+    "SCC": {"label": "是否监测每日热量摄入", "group": "生活习惯", "help": "选择“是”或“否"},
+    "FAF": {"label": "每周身体活动频率", "group": "生活习惯", "unit": "0 表示很少，3 表示频繁；小数表示中间程度", "step": 0.1},
+    "TUE": {"label": "电子设备使用时长等级", "group": "生活习惯", "unit": "0 表示较短，2 表示较长；小数表示中间程度", "step": 0.1},
+    "MTRANS": {"label": "主要交通方式", "group": "生活习惯", "help": "选择日常最常使用的交通方式"},
 }
 
 CATEGORY_LABELS = {
-    "Female": "Female（女性候选）",
-    "Male": "Male（男性候选）",
-    0: "0（含义待确认）",
-    1: "1（含义待确认）",
-    "0": "0（含义待确认）",
-    "Always": "Always（总是）",
-    "Frequently": "Frequently（经常）",
-    "Sometimes": "Sometimes（有时）",
-    "Automobile": "Automobile（汽车）",
-    "Bike": "Bike（自行车）",
-    "Motorbike": "Motorbike（摩托车）",
-    "Public_Transportation": "Public Transportation（公共交通）",
-    "Walking": "Walking（步行）",
+    "Female": "女性",
+    "Male": "男性",
+    0: "否",
+    1: "是",
+    "0": "从不",
+    "Always": "总是",
+    "Frequently": "经常",
+    "Sometimes": "有时",
+    "Automobile": "汽车",
+    "Bike": "自行车",
+    "Motorbike": "摩托车",
+    "Public_Transportation": "公共交通",
+    "Walking": "步行",
 }
 
 NAV_ITEMS = (
