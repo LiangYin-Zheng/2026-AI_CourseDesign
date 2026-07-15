@@ -43,9 +43,8 @@ def run_app() -> None:
             '<div class="sidebar-footer"><div class="label">当前活动模型</div>'
             f'<div class="model-row"><div class="model-name" title="{model_label}">{model_label}</div>'
             f'<span class="badge">{MODEL_INFO.get(active, {}).get("implementation", "模型")}</span></div>'
-            '<div class="label">系统状态</div>'
             f'<div class="status-row"><span class="status-dot"></span>{system_status}</div>'
-            '<div class="legal">仅用于课程演示，不构成医学诊断、健康评估或治疗建议。</div></div>',
+            '<div class="legal">仅用于课程演示</div></div>',
             unsafe_allow_html=True,
         )
     try:
