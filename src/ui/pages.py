@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from pathlib import Path
 from time import perf_counter, sleep
 
 import pandas as pd
@@ -15,6 +16,7 @@ from ui.components import (
     metric_card,
     parameter_summary_frame,
     page_header,
+    prediction_result_card_html,
     section_header,
     show_error,
 )
@@ -23,6 +25,7 @@ from ui.constants import (
     CLASS_LABELS,
     FIELD_INFO,
     MODEL_INFO,
+    PARAMETER_HELP,
     TARGET_DISPLAY_LABELS,
 )
 from ui.services import (
@@ -32,11 +35,24 @@ from ui.services import (
     load_example_sample,
     load_input_metadata,
     load_model_metrics,
+    load_training_history,
     predict_sample,
     project_relative_path,
     read_json,
     train_selected_model,
 )
+
+
+EDA_CHART_HEIGHTS = {
+    "年龄分布": 390,
+    "身高分布": 390,
+    "体重分布": 390,
+    "目标类别分布": 420,
+    "类别特征频数": 430,
+    "关键特征分组关系": 480,
+    "年龄身高体重关系": 500,
+    "相关性热力图": 560,
+}
 
 
 # 将数值格式化为适合指标卡展示的百分比。
@@ -96,7 +112,7 @@ def _comparison_chart(
     )
     upper = max(row["value"] for row in rows) * 1.16
     figure.update_layout(
-        height=292,
+        height=430,
         margin={"l": 8, "r": 70, "t": 12, "b": 20},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -308,21 +324,20 @@ def _probability_chart(probability_rows: list[dict]) -> None:
 # 展示预测结果、模型信息与排序后的七类概率。
 def _render_prediction_result(result: dict) -> None:
     predicted = result["predicted_class"]
+    model = MODEL_INFO[result["model_name"]]
+    animate = bool(st.session_state.pop("prediction_result_is_new", False))
     st.markdown(
-        '<div class="result-card"><div class="result-label">预测结果</div>'
-        f'<div class="result-class">{CLASS_LABELS[predicted]}</div>'
-        f'<div class="result-original">英文标签：{TARGET_DISPLAY_LABELS[predicted]}</div>'
-        f'<div class="result-confidence">{_percent(result["highest_probability"])}</div>'
-        '<div class="metric-help">最高预测概率</div></div>',
+        prediction_result_card_html(
+            chinese_label=CLASS_LABELS[predicted],
+            english_label=TARGET_DISPLAY_LABELS[predicted],
+            confidence=_percent(result["highest_probability"]),
+            model_name=model["name"],
+            model_kind=model["kind"],
+            elapsed=f"{result['elapsed_ms']:.2f} ms",
+            animate=animate,
+        ),
         unsafe_allow_html=True,
     )
-    details = st.columns(3)
-    with details[0]:
-        metric_card("当前模型", MODEL_INFO[result["model_name"]]["kind"], result["model_name"])
-    with details[1]:
-        metric_card("实现方式", result["implementation"], "已加载活动模型")
-    with details[2]:
-        metric_card("预测时间", f"{result['elapsed_ms']:.2f} ms", "单条模型推理")
     section_header("七类别概率", "按预测概率从高到低排列，最高类别使用同一主色突出。")
     probability_rows = [
         {
@@ -377,6 +392,7 @@ def render_prediction() -> None:
                     st.session_state["prediction_result"] = predict_sample(
                         _collect_prediction_sample(metadata)
                     )
+                    st.session_state["prediction_result_is_new"] = True
                 st.success("预测已完成。")
             except (FileNotFoundError, OSError, ValueError, RuntimeError) as error:
                 show_error(error, "预测")
@@ -411,6 +427,139 @@ def _localized_report(metrics: dict) -> pd.DataFrame:
         columns={"precision": "Precision", "recall": "Recall", "f1-score": "F1", "support": "样本数"}
     )
     return frame
+
+
+# 根据真实训练历史决定结果标签页集合。
+def _result_tab_names(has_history: bool) -> list[str]:
+    names = ["评估摘要", "混淆矩阵", "分类报告"]
+    if has_history:
+        names.append("训练曲线")
+    names.append("参数摘要")
+    return names
+
+
+# 将真实损失和验证指标绘制为统一蓝灰训练曲线。
+def _training_curve_figure(history: dict) -> go.Figure:
+    figure = make_subplots(specs=[[{"secondary_y": True}]])
+    train_loss = history.get("train_loss", [])
+    validation_loss = history.get("validation_loss", [])
+    validation_score = history.get("validation_score", [])
+    if train_loss:
+        figure.add_trace(
+            go.Scatter(
+                x=list(range(1, len(train_loss) + 1)),
+                y=train_loss,
+                mode="lines",
+                name="训练损失",
+                line={"color": "#2563EB", "width": 2.2},
+                hovertemplate="Epoch %{x}<br>训练损失 %{y:.5f}<extra></extra>",
+            ),
+            secondary_y=False,
+        )
+    if validation_loss:
+        figure.add_trace(
+            go.Scatter(
+                x=list(range(1, len(validation_loss) + 1)),
+                y=validation_loss,
+                mode="lines",
+                name="验证损失",
+                line={"color": "#7EA7E8", "width": 2, "dash": "dash"},
+                hovertemplate="Epoch %{x}<br>验证损失 %{y:.5f}<extra></extra>",
+            ),
+            secondary_y=False,
+        )
+    if validation_score:
+        figure.add_trace(
+            go.Scatter(
+                x=list(range(1, len(validation_score) + 1)),
+                y=validation_score,
+                mode="lines",
+                name="验证 Accuracy",
+                line={"color": "#16865C", "width": 2, "dash": "dot"},
+                hovertemplate="Epoch %{x}<br>验证 Accuracy %{y:.4f}<extra></extra>",
+            ),
+            secondary_y=True,
+        )
+    best_epoch = history.get("best_epoch")
+    if best_epoch:
+        figure.add_vline(
+            x=int(best_epoch),
+            line_width=1.5,
+            line_dash="dot",
+            line_color="#B76E00",
+            annotation_text=f"最佳 Epoch {best_epoch}",
+            annotation_position="top right",
+        )
+    figure.update_layout(
+        height=420,
+        margin={"l": 48, "r": 48, "t": 34, "b": 48},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={
+            "family": "-apple-system, BlinkMacSystemFont, PingFang SC, sans-serif",
+            "color": "#64748B",
+            "size": 12,
+        },
+        legend={"orientation": "h", "y": 1.08, "x": 0},
+        hovermode="x unified",
+    )
+    figure.update_xaxes(title_text="Epoch", gridcolor="#EEF2F7", zeroline=False)
+    figure.update_yaxes(
+        title_text="损失",
+        gridcolor="#EEF2F7",
+        zeroline=False,
+        secondary_y=False,
+    )
+    if validation_score:
+        figure.update_yaxes(
+            title_text="验证 Accuracy",
+            tickformat=".0%",
+            secondary_y=True,
+        )
+    return figure
+
+
+# 显示真实训练曲线及早停说明。
+def _render_training_curve(history: dict, key: str) -> None:
+    st.plotly_chart(
+        _training_curve_figure(history),
+        width="stretch",
+        config={"displayModeBar": False, "responsive": True},
+        key=key,
+    )
+    if history.get("early_stopped"):
+        st.caption("训练在达到最大轮数前结束；图中标记的是已保存历史中的最佳 Epoch。")
+
+
+# 根据训练确认、结果和错误状态计算三步语义。
+def _training_step_states(
+    confirmed: bool,
+    has_result: bool,
+    has_error: bool,
+) -> tuple[str, str, str]:
+    if has_error:
+        return "complete", "complete", "error"
+    if has_result:
+        return "complete", "complete", "active"
+    if confirmed:
+        return "complete", "active", "pending"
+    return "active", "pending", "pending"
+
+
+# 生成紧凑训练步骤条 HTML。
+def _training_step_markup(states: tuple[str, str, str]) -> str:
+    labels = ("配置参数", "确认训练", "查看结果")
+    items = []
+    for index, (label, state) in enumerate(zip(labels, states), start=1):
+        symbol = "✓" if state == "complete" else "!" if state == "error" else str(index)
+        items.append(
+            f'<div class="training-step {state}"><span class="training-step-dot">'
+            f'{symbol}</span><span class="training-step-text">{index} {label}</span></div>'
+        )
+        if index < len(labels):
+            line_state = "complete" if state == "complete" else "pending"
+            items.append(f'<span class="training-step-line {line_state}"></span>')
+    return f'<div class="step-strip">{"".join(items)}</div>'
 
 
 # 展示四模型指标、图表和详细评估产物。
@@ -468,16 +617,21 @@ def render_performance() -> None:
             _comparison_chart(all_metrics, metric_key, chart_label, model_name)
 
     section_header("详细结果", "通过选项卡切换内容，避免连续图像和大段原始文本。")
-    confusion_tab, report_tab, curve_tab, parameters_tab = st.tabs(
-        ["混淆矩阵", "分类报告", "训练曲线", "参数信息"]
-    )
-    with confusion_tab:
+    history = load_training_history(paths["models_dir"] / f"{model_name}.joblib")
+    detail_names = ["混淆矩阵", "分类报告"]
+    if history is not None:
+        detail_names.append("训练曲线")
+    detail_names.append("参数信息")
+    detail_tabs = dict(zip(detail_names, st.tabs(detail_names)))
+    if history is None:
+        st.caption("该模型未保存逐轮训练历史，因此不展示训练曲线。")
+    with detail_tabs["混淆矩阵"]:
         image_path = paths["metrics_dir"] / f"{model_name}_confusion_matrix.png"
         if image_path.is_file():
             st.image(str(image_path), caption=f"{metrics['display_name']} · 测试集混淆矩阵", width="stretch")
         else:
             empty_state("暂无混淆矩阵", "请在训练中心重新训练该模型。")
-    with report_tab:
+    with detail_tabs["分类报告"]:
         report = _localized_report(metrics)
         numeric_columns = [column for column in ("Precision", "Recall", "F1") if column in report]
         st.dataframe(
@@ -485,13 +639,10 @@ def render_performance() -> None:
             hide_index=True,
             width="stretch",
         )
-    with curve_tab:
-        curve_path = paths["metrics_dir"] / f"{model_name}_loss_curve.png"
-        if curve_path.is_file():
-            st.image(str(curve_path), caption=f"{metrics['display_name']} · 训练与验证损失", width="stretch")
-        else:
-            empty_state("没有逐轮训练曲线", "该 sklearn 模型未保存逐轮训练曲线。")
-    with parameters_tab:
+    if history is not None:
+        with detail_tabs["训练曲线"]:
+            _render_training_curve(history, f"performance_curve_{model_name}")
+    with detail_tabs["参数信息"]:
         st.markdown("**最佳或当前保存参数**")
         st.dataframe(
             parameter_summary_frame(metrics["display_name"], metrics["parameters"]),
@@ -515,10 +666,10 @@ def _strongest_correlation(summary: dict) -> tuple[str, str, float]:
 
 
 # 将 EDA 图表统一为适合课程展示的蓝灰视觉样式。
-def _style_eda_figure(figure: go.Figure, height: int = 500) -> go.Figure:
+def _style_eda_figure(figure: go.Figure, height: int) -> go.Figure:
     figure.update_layout(
         height=height,
-        margin={"l": 34, "r": 28, "t": 52, "b": 42},
+        margin={"l": 48, "r": 24, "t": 24, "b": 48},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font={
@@ -579,7 +730,7 @@ def _eda_figure(chart_name: str, frame: pd.DataFrame, summary: dict) -> go.Figur
         )
         figure.update_xaxes(title_text=axis_title)
         figure.update_yaxes(title_text="样本数")
-        return _style_eda_figure(figure, 470)
+        return _style_eda_figure(figure, EDA_CHART_HEIGHTS[chart_name])
     if chart_name == "目标类别分布":
         rows = sorted(
             summary["target_distribution"].items(),
@@ -598,7 +749,7 @@ def _eda_figure(chart_name: str, frame: pd.DataFrame, summary: dict) -> go.Figur
             )
         )
         figure.update_xaxes(title_text="样本数")
-        return _style_eda_figure(figure, 470)
+        return _style_eda_figure(figure, EDA_CHART_HEIGHTS[chart_name])
     if chart_name == "类别特征频数":
         fields = (
             ("Gender", "性别"),
@@ -624,7 +775,7 @@ def _eda_figure(chart_name: str, frame: pd.DataFrame, summary: dict) -> go.Figur
                 row=row,
                 col=column,
             )
-        return _style_eda_figure(figure, 610)
+        return _style_eda_figure(figure, EDA_CHART_HEIGHTS[chart_name])
     if chart_name == "关键特征分组关系":
         grouped = summary["grouped_numeric_means"]
         labels = sorted(grouped, key=lambda label: grouped[label]["Weight"])
@@ -649,7 +800,7 @@ def _eda_figure(chart_name: str, frame: pd.DataFrame, summary: dict) -> go.Figur
                 row=1,
                 col=column,
             )
-        return _style_eda_figure(figure, 520)
+        return _style_eda_figure(figure, EDA_CHART_HEIGHTS[chart_name])
     if chart_name == "年龄身高体重关系":
         sample = frame.sample(n=min(len(frame), 2400), random_state=42)
         figure = go.Figure(
@@ -670,7 +821,7 @@ def _eda_figure(chart_name: str, frame: pd.DataFrame, summary: dict) -> go.Figur
         )
         figure.update_xaxes(title_text="身高（米）")
         figure.update_yaxes(title_text="体重（千克）")
-        return _style_eda_figure(figure, 540)
+        return _style_eda_figure(figure, EDA_CHART_HEIGHTS[chart_name])
     correlations = summary["numeric_correlations"]
     fields = list(correlations)
     values = [[correlations[row][column] for column in fields] for row in fields]
@@ -689,7 +840,7 @@ def _eda_figure(chart_name: str, frame: pd.DataFrame, summary: dict) -> go.Figur
         )
     )
     figure.update_yaxes(autorange="reversed")
-    return _style_eda_figure(figure, 590)
+    return _style_eda_figure(figure, EDA_CHART_HEIGHTS[chart_name])
 
 
 # 展示按类别浏览的 EDA 图表中心。
@@ -785,12 +936,19 @@ def render_eda() -> None:
 
 # 解析逗号分隔的隐藏层结构并校验正整数。
 def _parse_hidden_layers(value: str) -> tuple[int, ...]:
-    try:
-        layers = tuple(int(item.strip()) for item in value.split(",") if item.strip())
-    except ValueError as error:
-        raise ValueError("隐藏层结构必须使用逗号分隔的正整数") from error
-    if not layers or any(size <= 0 for size in layers):
-        raise ValueError("隐藏层结构必须至少包含一个正整数")
+    text = value.strip()
+    if not text:
+        raise ValueError("隐藏层结构不能为空，请输入如 64 或 64,32")
+    parts = [item.strip() for item in text.split(",")]
+    if any(not item for item in parts):
+        raise ValueError("隐藏层结构不能包含空层，请使用如 64,32 的格式")
+    if len(parts) > 4:
+        raise ValueError("隐藏层结构最多支持 4 层")
+    if any(not item.isascii() or not item.isdecimal() for item in parts):
+        raise ValueError("隐藏层结构只能包含整数和英文逗号")
+    layers = tuple(int(item) for item in parts)
+    if any(size < 4 or size > 512 for size in layers):
+        raise ValueError("隐藏层每层神经元数量必须在 4～512 之间")
     return layers
 
 
@@ -805,16 +963,22 @@ def _training_parameters(model_name: str, config: dict) -> dict:
             20.0,
             float(candidate["C"]),
             0.1,
-            help="值越小，正则化越强。",
+            help=PARAMETER_HELP["C"],
         )
         class_weight = st.selectbox(
             "类别权重",
             [None, "balanced"],
             format_func=lambda value: "不加权" if value is None else "自动平衡",
+            help=PARAMETER_HELP["class_weight"],
         )
         with st.expander("高级参数", expanded=False):
             max_iter = st.number_input(
-                "最大迭代次数", 50, 2000, int(defaults["max_iter"]), 50
+                "最大迭代次数",
+                50,
+                2000,
+                int(defaults["max_iter"]),
+                50,
+                help=PARAMETER_HELP["max_iter"],
             )
         return {"C": regularization, "class_weight": class_weight, "max_iter": max_iter}
     if model_name == "sklearn_mlp":
@@ -822,10 +986,14 @@ def _training_parameters(model_name: str, config: dict) -> dict:
         layer_text = st.text_input(
             "隐藏层结构",
             value=",".join(str(value) for value in candidate["hidden_layer_sizes"]),
-            help="使用逗号分隔，如 128,64。",
+            help=PARAMETER_HELP["hidden_layer_sizes"],
         )
         activation = st.segmented_control(
-            "激活函数", ["relu", "tanh"], default="relu", width="stretch"
+            "激活函数",
+            ["relu", "tanh"],
+            default="relu",
+            width="stretch",
+            help=PARAMETER_HELP["activation"],
         )
         with st.expander("高级参数", expanded=False):
             alpha = st.number_input(
@@ -834,6 +1002,7 @@ def _training_parameters(model_name: str, config: dict) -> dict:
                 0.1,
                 float(candidate["alpha"]),
                 format="%.5f",
+                help=PARAMETER_HELP["alpha"],
             )
             learning_rate = st.number_input(
                 "初始学习率",
@@ -841,9 +1010,15 @@ def _training_parameters(model_name: str, config: dict) -> dict:
                 0.1,
                 float(candidate["learning_rate_init"]),
                 format="%.4f",
+                help=PARAMETER_HELP["learning_rate"],
             )
             max_iter = st.number_input(
-                "最大迭代次数", 50, 1000, int(defaults["max_iter"]), 25
+                "最大迭代次数",
+                50,
+                1000,
+                int(defaults["max_iter"]),
+                25,
+                help=PARAMETER_HELP["max_iter"],
             )
         return {
             "hidden_layer_sizes": _parse_hidden_layers(layer_text),
@@ -854,17 +1029,37 @@ def _training_parameters(model_name: str, config: dict) -> dict:
         }
     if model_name == "manual_logistic":
         learning_rate = st.number_input(
-            "学习率", 0.001, 1.0, float(defaults["learning_rate"]), format="%.3f"
+            "学习率",
+            0.001,
+            1.0,
+            float(defaults["learning_rate"]),
+            format="%.3f",
+            help=PARAMETER_HELP["learning_rate"],
         )
         max_epochs = st.number_input(
-            "最大训练轮数", 10, 2000, int(defaults["max_epochs"]), 10
+            "最大训练轮数",
+            10,
+            2000,
+            int(defaults["max_epochs"]),
+            10,
+            help=PARAMETER_HELP["max_epochs"],
         )
         with st.expander("高级参数", expanded=False):
             l2 = st.number_input(
-                "L2 正则化系数", 0.0, 0.1, float(defaults["l2"]), format="%.4f"
+                "L2 正则化系数",
+                0.0,
+                0.1,
+                float(defaults["l2"]),
+                format="%.4f",
+                help=PARAMETER_HELP["l2"],
             )
             patience = st.number_input(
-                "早停耐心轮数", 2, 200, int(defaults["patience"]), 1
+                "早停耐心轮数",
+                2,
+                200,
+                int(defaults["patience"]),
+                1,
+                help=PARAMETER_HELP["patience"],
             )
             tolerance = st.number_input(
                 "最小改进阈值",
@@ -872,6 +1067,7 @@ def _training_parameters(model_name: str, config: dict) -> dict:
                 0.01,
                 float(defaults["tolerance"]),
                 format="%.6f",
+                help=PARAMETER_HELP["tolerance"],
             )
         return {
             "learning_rate": learning_rate,
@@ -881,10 +1077,20 @@ def _training_parameters(model_name: str, config: dict) -> dict:
             "tolerance": tolerance,
         }
     hidden_size = st.number_input(
-        "隐藏层神经元数", 4, 512, int(defaults["hidden_size"]), 4
+        "隐藏层神经元数",
+        4,
+        512,
+        int(defaults["hidden_size"]),
+        4,
+        help=PARAMETER_HELP["hidden_size"],
     )
     max_epochs = st.number_input(
-        "最大训练轮数", 10, 1000, int(defaults["max_epochs"]), 10
+        "最大训练轮数",
+        10,
+        1000,
+        int(defaults["max_epochs"]),
+        10,
+        help=PARAMETER_HELP["max_epochs"],
     )
     with st.expander("高级参数", expanded=False):
         learning_rate = st.number_input(
@@ -893,15 +1099,31 @@ def _training_parameters(model_name: str, config: dict) -> dict:
             0.5,
             float(defaults["learning_rate"]),
             format="%.4f",
+            help=PARAMETER_HELP["learning_rate"],
         )
         l2 = st.number_input(
-            "L2 正则化系数", 0.0, 0.1, float(defaults["l2"]), format="%.4f"
+            "L2 正则化系数",
+            0.0,
+            0.1,
+            float(defaults["l2"]),
+            format="%.4f",
+            help=PARAMETER_HELP["l2"],
         )
         batch_size = st.number_input(
-            "批次大小", 16, 2048, int(defaults["batch_size"]), 16
+            "批次大小",
+            16,
+            2048,
+            int(defaults["batch_size"]),
+            16,
+            help=PARAMETER_HELP["batch_size"],
         )
         patience = st.number_input(
-            "早停耐心轮数", 2, 200, int(defaults["patience"]), 1
+            "早停耐心轮数",
+            2,
+            200,
+            int(defaults["patience"]),
+            1,
+            help=PARAMETER_HELP["patience"],
         )
         tolerance = st.number_input(
             "最小改进阈值",
@@ -909,6 +1131,7 @@ def _training_parameters(model_name: str, config: dict) -> dict:
             0.01,
             float(defaults["tolerance"]),
             format="%.6f",
+            help=PARAMETER_HELP["tolerance"],
         )
     return {
         "hidden_size": hidden_size,
@@ -921,65 +1144,91 @@ def _training_parameters(model_name: str, config: dict) -> dict:
     }
 
 
+# 获取本次训练或正式结果对应的模型与指标路径。
+def _training_result_paths(result: dict, paths: dict[str, Path]) -> tuple[Path, Path]:
+    model_path = Path(
+        result.get(
+            "model_path",
+            paths["models_dir"] / f"{result['model_name']}.joblib",
+        )
+    )
+    metrics_dir = Path(result.get("metrics_dir", paths["metrics_dir"]))
+    return model_path, metrics_dir
+
+
 # 展示训练完成后的核心指标、产物和显式应用操作。
 def _render_training_result(result: dict) -> None:
     section_header("训练结果", "新实验已保存，但不会自动替换预测页面的活动模型。")
     test = result["test_metrics"]
-    columns = st.columns(4)
+    columns = st.columns([1.35, 1, 1, 1])
     values = (
         ("模型", result["display_name"], "本次训练"),
         ("Accuracy", _percent(test["accuracy"]), "测试集最终评价"),
         ("Macro F1", _percent(test["macro_f1"]), "测试集最终评价"),
         ("训练时间", f"{result['training_time_seconds']:.3f} 秒", "本次实测"),
     )
-    for column, value in zip(columns, values):
+    for index, (column, value) in enumerate(zip(columns, values)):
         with column:
-            metric_card(*value)
+            metric_card(*value, model_value=index == 0)
     _, paths = load_workflow_context()
-    tabs = st.tabs(["评估摘要", "混淆矩阵", "分类报告", "训练曲线", "参数摘要"])
-    with tabs[0]:
+    model_path, metrics_dir = _training_result_paths(result, paths)
+    history = load_training_history(model_path)
+    tab_names = _result_tab_names(history is not None)
+    tabs = dict(zip(tab_names, st.tabs(tab_names)))
+    with tabs["评估摘要"]:
         metric_card("Weighted F1", _percent(test["weighted_f1"]), "测试集加权指标")
-        st.info(f"产物位置：{project_relative_path(paths['models_dir'] / (result['model_name'] + '.joblib'))}")
-    with tabs[1]:
-        st.image(str(paths["metrics_dir"] / f"{result['model_name']}_confusion_matrix.png"), width="stretch")
-    with tabs[2]:
+        st.info(f"产物位置：{project_relative_path(model_path)}")
+        if history is None:
+            st.caption("该模型未保存逐轮训练历史，因此不展示训练曲线。")
+    with tabs["混淆矩阵"]:
+        st.image(
+            str(metrics_dir / f"{result['model_name']}_confusion_matrix.png"),
+            width="stretch",
+        )
+    with tabs["分类报告"]:
         st.dataframe(_localized_report(result), hide_index=True, width="stretch")
-    with tabs[3]:
-        curve = paths["metrics_dir"] / f"{result['model_name']}_loss_curve.png"
-        if curve.is_file():
-            st.image(str(curve), width="stretch")
-        else:
-            empty_state("没有逐轮训练曲线", "该 sklearn 模型未保存逐轮训练曲线。")
-    with tabs[4]:
+    if history is not None:
+        with tabs["训练曲线"]:
+            _render_training_curve(history, f"training_result_curve_{result['model_name']}")
+    with tabs["参数摘要"]:
         st.dataframe(
             parameter_summary_frame(result["display_name"], result["parameters"]),
             hide_index=True,
             width="stretch",
         )
-    action_columns = st.columns(2)
-    with action_columns[0]:
-        if st.button("保留为实验结果", width="stretch"):
-            st.success("实验结果已保留在统一模型与指标目录中。")
-    with action_columns[1]:
-        if st.button("应用到预测页面", type="primary", width="stretch"):
-            try:
-                activate_model(result["model_name"])
-                st.session_state.pop("prediction_result", None)
-                st.success("活动模型已更新，预测页面将使用该模型。")
-            except (FileNotFoundError, OSError, ValueError) as error:
-                show_error(error, "活动模型更新")
+    with st.container(border=True, key="training_result_actions"):
+        action_columns = st.columns(2)
+        with action_columns[0]:
+            if st.button("保留为实验结果", width="stretch"):
+                if result.get("run_dir"):
+                    st.success("实验结果已保存在独立 run 目录中，活动模型保持不变。")
+                else:
+                    st.info("当前展示的是已保存结果，活动模型保持不变。")
+        with action_columns[1]:
+            if st.button("应用到预测页面", type="primary", width="stretch"):
+                try:
+                    activate_model(
+                        result["model_name"],
+                        source_model_path=model_path,
+                        source_metrics=result,
+                    )
+                    st.session_state.pop("prediction_result", None)
+                    st.success("活动模型已更新，预测页面将使用该模型。")
+                except (FileNotFoundError, OSError, ValueError) as error:
+                    show_error(error, "活动模型更新")
 
 
 # 展示动态参数、真实训练状态和结果应用流程。
 def render_training() -> None:
     page_header("模型训练中心", "按模型配置真实训练参数，保存实验后再决定是否应用到预测。")
-    result_step_class = "step-item active" if st.session_state.get("training_result") else "step-item"
-    st.markdown(
-        '<div class="step-strip">'
-        '<div class="step-item active"><span class="step-number">1</span><span>选择模型与参数</span></div>'
-        '<div class="step-item"><span class="step-number">2</span><span>确认训练配置</span></div>'
-        f'<div class="{result_step_class}"><span class="step-number">3</span><span>查看训练结果</span></div>'
-        "</div>",
+    step_placeholder = st.empty()
+    initial_states = _training_step_states(
+        bool(st.session_state.get("training_confirmed", False)),
+        bool(st.session_state.get("training_result")),
+        st.session_state.get("training_state") == "error",
+    )
+    step_placeholder.markdown(
+        _training_step_markup(initial_states),
         unsafe_allow_html=True,
     )
     try:
@@ -1001,7 +1250,7 @@ def render_training() -> None:
             show_error(error, "参数解析")
             return
     with summary_column:
-        section_header("2 · 训练前确认", "训练会更新该模型的实验产物，但不会自动替换活动模型。")
+        section_header("2 · 训练前确认", "训练结果写入独立 run 目录，不会覆盖正式模型或自动替换活动模型。")
         estimate = "通常较快，实际时间取决于参数和设备" if model_name.startswith("sklearn_") else "逐轮 NumPy 训练，轮数越高耗时越长"
         st.markdown(
             f'<div class="card"><div class="metric-label">模型</div><strong>{MODEL_INFO[model_name]["name"]}</strong>'
@@ -1016,9 +1265,17 @@ def render_training() -> None:
         )
         with st.expander("查看原始配置", expanded=False):
             st.code(json.dumps(parameters, ensure_ascii=False, indent=2), language="json")
-        confirmed = st.checkbox("我已确认参数，并了解测试集不参与调参或活动模型选择。")
+        confirmed = st.checkbox(
+            "我已确认参数，并了解测试集不参与调参或活动模型选择。",
+            key="training_confirmed",
+        )
         start = st.button("开始训练", type="primary", width="stretch", disabled=not confirmed)
     if start:
+        st.session_state["training_state"] = "running"
+        step_placeholder.markdown(
+            _training_step_markup(_training_step_states(True, False, False)),
+            unsafe_allow_html=True,
+        )
         section_header("3 · 训练过程", "sklearn 模型无法提供可靠逐轮回调，因此使用真实阶段式状态。")
         progress = st.progress(0, text="正在加载并校验数据……")
         status = st.status("训练任务进行中", expanded=True)
@@ -1039,8 +1296,18 @@ def render_training() -> None:
             progress.progress(100, text="训练与产物保存完成。")
             status.update(label="训练任务已完成", state="complete", expanded=False)
             st.session_state["training_result"] = result
+            st.session_state["training_state"] = "success"
+            step_placeholder.markdown(
+                _training_step_markup(_training_step_states(True, True, False)),
+                unsafe_allow_html=True,
+            )
             st.success("训练完成。实验结果已保存，活动模型保持不变。")
         except (FileNotFoundError, OSError, ValueError, RuntimeError, FloatingPointError) as error:
+            st.session_state["training_state"] = "error"
+            step_placeholder.markdown(
+                _training_step_markup(_training_step_states(True, False, True)),
+                unsafe_allow_html=True,
+            )
             status.update(label="训练任务未完成", state="error", expanded=True)
             progress.empty()
             show_error(error, "模型训练")
@@ -1055,6 +1322,7 @@ def render_training() -> None:
         if st.button("查看最近已保存结果", key="show_saved_training_result"):
             try:
                 st.session_state["training_result"] = load_model_metrics(model_name)
+                st.session_state["training_state"] = "success"
                 st.rerun()
             except (FileNotFoundError, OSError, ValueError) as error:
                 show_error(error, "最近训练结果加载")
