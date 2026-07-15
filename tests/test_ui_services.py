@@ -3,7 +3,7 @@ from pathlib import Path
 
 import joblib
 
-from ui.constants import CLASS_LABELS, MODEL_INFO
+from ui.constants import CLASS_LABELS, FIELD_INFO, MODEL_INFO, TARGET_DISPLAY_LABELS
 from ui.services import (
     activate_model,
     load_dashboard_data,
@@ -32,6 +32,18 @@ def test_ui_constants_cover_dataset_classes_and_models() -> None:
         "manual_logistic",
         "manual_mlp",
     }
+
+
+# 验证界面规范化原始目标拼写，但不改变模型内部类别键。
+def test_target_display_labels_normalize_source_typo() -> None:
+    assert set(TARGET_DISPLAY_LABELS) == set(CLASS_LABELS)
+    assert "Normal_Weight" in TARGET_DISPLAY_LABELS.values()
+    assert "0rmal_Weight" not in TARGET_DISPLAY_LABELS.values()
+
+
+# 验证预测主标签不再向普通用户展示临时措辞。
+def test_prediction_field_labels_are_user_facing() -> None:
+    assert all("候选" not in info["label"] for info in FIELD_INFO.values())
 
 
 # 验证首页数据来自现有 CSV 和指标产物
