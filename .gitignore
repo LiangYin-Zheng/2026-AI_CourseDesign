@@ -25,3 +25,6 @@ outputs/models/*.npz
 
 # Ignore ui processing artifacts
 outputs/ui_screenshots/
+
+# Ignore report files
+docs/汇报/
